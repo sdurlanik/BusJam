@@ -74,5 +74,10 @@ namespace Sdurlanik.BusJam.MVC.Views
         {
             GridPosition = newPosition;
         }
+        
+        public async UniTask MoveToPoint(Vector3 worldPosition)
+        {
+            await transform.DOMove(worldPosition, 0.3f).SetEase(Ease.OutQuad).ToUniTask();
+        }
     }
 }

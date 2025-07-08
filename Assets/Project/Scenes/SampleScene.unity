@@ -209,8 +209,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalRotation: {x: -0.553682, y: 0.007991271, z: -0.0053144037, w: -0.8326729}
+  m_LocalPosition: {x: 1.9543103, y: 10.240967, z: -2.6388445}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -461,6 +461,11 @@ MonoBehaviour:
   _characterPrefab: {fileID: 2899515022793868174, guid: c56d3f1a754fb1d46bec6b4be423ab02,
     type: 3}
   _obstaclePrefab: {fileID: 0}
+  _mainGridTilePrefab: {fileID: 995471777950965797, guid: 0fc3a416f0bf5444193073eedcd02455,
+    type: 3}
+  _waitingAreaTilePrefab: {fileID: 995471777950965797, guid: 0fc3a416f0bf5444193073eedcd02455,
+    type: 3}
+  _gridConfiguration: {fileID: 11400000, guid: ff8e65ccd804b1c48b1babadf38131a1, type: 2}
 --- !u!4 &1951325323
 Transform:
   m_ObjectHideFlags: 0

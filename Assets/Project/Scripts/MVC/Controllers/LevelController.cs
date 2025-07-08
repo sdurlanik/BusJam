@@ -1,4 +1,4 @@
-﻿using Sdurlanik.BusJam.Core;
+﻿using Sdurlanik.BusJam.Core.Grid;
 using Sdurlanik.BusJam.Core.Events;
 using Sdurlanik.BusJam.Core.Factories;
 using Sdurlanik.BusJam.Models;
@@ -10,14 +10,14 @@ namespace Sdurlanik.BusJam.Controllers
     public class LevelController : ILevelController
     {
         private readonly SignalBus _signalBus;
-        private readonly IGridManager _gridManager;
+        private readonly IGridSystemManager _gridSystemManager;
         private readonly ICharacterFactory _characterFactory;
         private readonly IObstacleFactory _obstacleFactory;
         
-        public LevelController(SignalBus signalBus, IGridManager gridManager, ICharacterFactory characterFactory, IObstacleFactory obstacleFactory)
+        public LevelController(SignalBus signalBus, IGridSystemManager gridSystemManager, ICharacterFactory characterFactory, IObstacleFactory obstacleFactory)
         {
             _signalBus = signalBus;
-            _gridManager = gridManager;
+            _gridSystemManager = gridSystemManager;
             _characterFactory = characterFactory;
             _obstacleFactory = obstacleFactory;
             
@@ -32,20 +32,21 @@ namespace Sdurlanik.BusJam.Controllers
         public void LoadLevel(LevelSO levelData)
         {
             Debug.Log($"Loading Level: {levelData.name}");
-            _gridManager.InitializeGrid(levelData.GridWidth, levelData.GridHeight);
+    
+            var mainGrid = _gridSystemManager.MainGrid;
 
             foreach (var obstacleData in levelData.Obstacles)
             {
-                var obstaclePosition = new Vector3(obstacleData.GridPosition.x, 0, obstacleData.GridPosition.y);
+                var obstaclePosition = mainGrid.GetWorldPosition(obstacleData.GridPosition);
                 var obstacleInstance = _obstacleFactory.Create(obstaclePosition);
-                _gridManager.PlaceObject(obstacleInstance, obstacleData.GridPosition);
+                mainGrid.PlaceObject(obstacleInstance, obstacleData.GridPosition);
             }
-            
+    
             foreach (var characterData in levelData.Characters)
             {
-                var characterPosition = new Vector3(characterData.GridPosition.x, 0.5f, characterData.GridPosition.y);
+                var characterPosition = mainGrid.GetWorldPosition(characterData.GridPosition, 0.5f);
                 var characterView = _characterFactory.Create(characterData.Color, characterPosition, characterData.GridPosition);
-                _gridManager.PlaceObject(characterView.gameObject, characterData.GridPosition);
+                mainGrid.PlaceObject(characterView.gameObject, characterData.GridPosition);
             }
 
             Debug.Log("Level Loaded Successfully. Firing LevelReadySignal.");

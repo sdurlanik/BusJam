@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Sdurlanik.BusJam.Core;
+using Sdurlanik.BusJam.Core.Grid;
 using Sdurlanik.BusJam.Core.Events;
-using Sdurlanik.BusJam.MVC.Views;
 using UnityEngine;
 using Zenject;
 
@@ -11,51 +10,45 @@ namespace Sdurlanik.BusJam.MVC.Controllers
     public class CharacterMovementController
     {
         private readonly SignalBus _signalBus;
-        private readonly IGridManager _gridManager;
+        private readonly IGridSystemManager _gridSystemManager;
+        private readonly IWaitingAreaController _waitingAreaController;
 
-        public CharacterMovementController(SignalBus signalBus, IGridManager gridManager)
+        public CharacterMovementController(SignalBus signalBus, IGridSystemManager gridSystemManager, IWaitingAreaController waitingAreaController)
         {
             _signalBus = signalBus;
-            _gridManager = gridManager;
+            _gridSystemManager = gridSystemManager;
+            _waitingAreaController = waitingAreaController;
             
             _signalBus.Subscribe<CharacterClickedSignal>(OnCharacterClicked);
         }
 
-        private async void OnCharacterClicked(CharacterClickedSignal signal)
+         private async void OnCharacterClicked(CharacterClickedSignal signal)
         {
             var character = signal.ClickedCharacter;
             var startPos = character.GridPosition;
-            Debug.Log($"MovementController received click for character at {character.GridPosition}. Checking path...");
+            
+            var mainGrid = _gridSystemManager.MainGrid;
 
-            var exitPoints = GetExitPoints();
+            var exitPoints = GetExitPoints(mainGrid);
             List<Vector2Int> shortestPath = null;
 
             foreach (var exitPoint in exitPoints)
             {
-                var foundPath = _gridManager.FindPath(character.GridPosition, exitPoint);
+                var foundPath = mainGrid.FindPath(character.GridPosition, exitPoint);
 
-                if (foundPath != null)
+                if (foundPath != null && (shortestPath == null || foundPath.Count < shortestPath.Count))
                 {
-                    if (shortestPath == null || foundPath.Count < shortestPath.Count)
-                    {
-                        shortestPath = foundPath;
-                    }
+                    shortestPath = foundPath;
                 }
             }
 
-            if (shortestPath != null)
+            if (shortestPath != null && shortestPath.Count > 1)
             {
-                string pathString = string.Join(" -> ", shortestPath.Select(p => p.ToString()));
-                Debug.Log($"Path FOUND for character {character.name}. Path: {pathString}. Starting movement...");
-             
-                _gridManager.ClearCell(startPos);
+                mainGrid.ClearCell(startPos);
                 await character.MoveAlongPath(shortestPath);
-                var endPos = shortestPath.Last();
-                
-                Debug.Log($"Character {character.name} has finished its movement.");
-                _gridManager.PlaceObject(character.gameObject, endPos);
-                character.UpdateGridPosition(endPos);
-                // TODO: Place character at the waiting cell
+                Debug.Log($"Character {character.name} reached exit point. Handing over to WaitingAreaController.");
+
+                await _waitingAreaController.AddCharacterToArea(character);
             }
             else
             {
@@ -63,14 +56,16 @@ namespace Sdurlanik.BusJam.MVC.Controllers
             }
         }
 
-        private List<Vector2Int> GetExitPoints()
+        private List<Vector2Int> GetExitPoints(IGrid grid)
         {
+            //TODO: Make this configurable with a grid configuration
             var exits = new List<Vector2Int>();
             int topRow = 4;
-            for (int i = 0; i < 5; i++) 
+            int gridWidth = 5; 
+            for (int i = 0; i < gridWidth; i++) 
             {
                 var exitPos = new Vector2Int(i, topRow);
-                if (_gridManager.IsCellAvailable(exitPos))
+                if (grid.IsCellAvailable(exitPos))
                 {
                     exits.Add(exitPos);
                 }
