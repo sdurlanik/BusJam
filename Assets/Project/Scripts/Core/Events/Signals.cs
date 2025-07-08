@@ -1,6 +1,6 @@
 ﻿using Sdurlanik.BusJam.Models;
 
-namespace Sdurlanik.BusJam.Events
+namespace Sdurlanik.BusJam.Core.Events
 {
     public struct LevelReadySignal { }
     public struct LevelSuccessSignal { }

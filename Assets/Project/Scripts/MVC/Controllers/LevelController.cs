@@ -1,5 +1,6 @@
 ﻿using Sdurlanik.BusJam.Core;
-using Sdurlanik.BusJam.Events;
+using Sdurlanik.BusJam.Core.Events;
+using Sdurlanik.BusJam.Core.Factories;
 using Sdurlanik.BusJam.Models;
 using UnityEngine;
 using Zenject;
@@ -10,11 +11,15 @@ namespace Sdurlanik.BusJam.Controllers
     {
         private readonly SignalBus _signalBus;
         private readonly IGridManager _gridManager;
-
-        public LevelController(SignalBus signalBus, IGridManager gridManager)
+        private readonly ICharacterFactory _characterFactory;
+        private readonly IObstacleFactory _obstacleFactory;
+        
+        public LevelController(SignalBus signalBus, IGridManager gridManager, ICharacterFactory characterFactory, IObstacleFactory obstacleFactory)
         {
             _signalBus = signalBus;
             _gridManager = gridManager;
+            _characterFactory = characterFactory;
+            _obstacleFactory = obstacleFactory;
             
             _signalBus.Subscribe<LevelLoadRequestedSignal>(OnLevelLoadRequested);
         }
@@ -27,24 +32,19 @@ namespace Sdurlanik.BusJam.Controllers
         public void LoadLevel(LevelSO levelData)
         {
             Debug.Log($"Loading Level: {levelData.name}");
-
             _gridManager.InitializeGrid(levelData.GridWidth, levelData.GridHeight);
 
             foreach (var obstacleData in levelData.Obstacles)
             {
-                // TODO: use a factory or pool for obstacle instantiation
-                
-                var obstaclePrefab = Resources.Load<GameObject>("Prefabs/Obstacle");
-                var obstacleInstance = Object.Instantiate(obstaclePrefab, new Vector3(obstacleData.GridPosition.x, 0, obstacleData.GridPosition.y), Quaternion.identity);
+                var obstaclePosition = new Vector3(obstacleData.GridPosition.x, 0, obstacleData.GridPosition.y);
+                var obstacleInstance = _obstacleFactory.Create(obstaclePosition);
                 _gridManager.PlaceObject(obstacleInstance, obstacleData.GridPosition);
             }
             
             foreach (var characterData in levelData.Characters)
             {
-                // TODO: use a factory or pool for character instantiation
-                var characterPrefab = Resources.Load<GameObject>("Prefabs/Character");
-                var characterInstance = Object.Instantiate(characterPrefab, new Vector3(characterData.GridPosition.x, 0.5f, characterData.GridPosition.y), Quaternion.identity);
-                
+                var characterPosition = new Vector3(characterData.GridPosition.x, 0.5f, characterData.GridPosition.y);
+                var characterInstance = _characterFactory.Create(characterData.Color, characterPosition);
                 _gridManager.PlaceObject(characterInstance, characterData.GridPosition);
             }
 
