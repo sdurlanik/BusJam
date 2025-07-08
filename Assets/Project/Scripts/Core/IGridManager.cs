@@ -10,6 +10,8 @@ namespace Sdurlanik.BusJam.Core
         
         bool IsCellAvailable(Vector2Int gridPosition);
         
+        void ClearCell(Vector2Int gridPosition);
+        
         System.Collections.Generic.List<Vector2Int> FindPath(Vector2Int start, Vector2Int end);
     }
 }

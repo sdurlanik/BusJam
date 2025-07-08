@@ -2,6 +2,7 @@
 using Sdurlanik.BusJam.Core;
 using Sdurlanik.BusJam.Core.Events;
 using Sdurlanik.BusJam.Core.Factories;
+using Sdurlanik.BusJam.MVC.Controllers;
 using UnityEngine;
 using Zenject;
 
@@ -29,6 +30,7 @@ namespace Sdurlanik.BusJam.Installers
             
             Container.Bind<IGridManager>().To<GridManager>().AsSingle();
             Container.Bind<ILevelController>().To<LevelController>().AsSingle().NonLazy();
+            Container.Bind<CharacterMovementController>().AsSingle().NonLazy();
 
         }
     }

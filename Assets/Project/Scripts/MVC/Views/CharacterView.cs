@@ -1,4 +1,7 @@
-﻿using Sdurlanik.BusJam.Core.Events;
+﻿using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
+using DG.Tweening;
+using Sdurlanik.BusJam.Core.Events;
 using Sdurlanik.BusJam.Models;
 using UnityEngine;
 using Zenject;
@@ -50,6 +53,26 @@ namespace Sdurlanik.BusJam.MVC.Views
                 case CharacterColor.Purple: materialColor = new UnityEngine.Color(0.5f, 0, 0.5f); break;
             }
             _meshRenderer.material.color = materialColor;
+        }
+        public async UniTask MoveAlongPath(List<Vector2Int> path)
+        {
+            var sequence = DOTween.Sequence();
+            
+            foreach (var gridPos in path)
+            {
+                var worldPosition = new Vector3(gridPos.x, transform.position.y, gridPos.y);
+                
+                sequence.Append(transform.DOMove(worldPosition, 0.2f).SetEase(Ease.Linear));
+            }
+
+            await sequence.Play().ToUniTask();
+            
+            Debug.Log("Movement sequence completed!");
+        }
+        
+        public void UpdateGridPosition(Vector2Int newPosition)
+        {
+            GridPosition = newPosition;
         }
     }
 }
