@@ -1,4 +1,5 @@
 ﻿using Sdurlanik.BusJam.Models;
+using Sdurlanik.BusJam.MVC.Views;
 
 namespace Sdurlanik.BusJam.Core.Events
 {
@@ -12,8 +13,9 @@ namespace Sdurlanik.BusJam.Core.Events
         public LevelLoadRequestedSignal(LevelSO levelData) => LevelData = levelData;
     }
 
-    public class CharacterSelectedSignal
+    public struct CharacterClickedSignal
     {
-        
+        public readonly CharacterView ClickedCharacter;
+        public CharacterClickedSignal(CharacterView clickedCharacter) => ClickedCharacter = clickedCharacter;
     }
 }

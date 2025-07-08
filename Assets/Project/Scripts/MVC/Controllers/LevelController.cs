@@ -44,8 +44,8 @@ namespace Sdurlanik.BusJam.Controllers
             foreach (var characterData in levelData.Characters)
             {
                 var characterPosition = new Vector3(characterData.GridPosition.x, 0.5f, characterData.GridPosition.y);
-                var characterInstance = _characterFactory.Create(characterData.Color, characterPosition);
-                _gridManager.PlaceObject(characterInstance, characterData.GridPosition);
+                var characterView = _characterFactory.Create(characterData.Color, characterPosition, characterData.GridPosition);
+                _gridManager.PlaceObject(characterView.gameObject, characterData.GridPosition);
             }
 
             Debug.Log("Level Loaded Successfully. Firing LevelReadySignal.");

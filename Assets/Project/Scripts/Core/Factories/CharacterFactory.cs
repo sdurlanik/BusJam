@@ -1,4 +1,5 @@
 ﻿using Sdurlanik.BusJam.Models;
+using Sdurlanik.BusJam.MVC.Views;
 using UnityEngine;
 using Zenject;
 
@@ -15,11 +16,10 @@ namespace Sdurlanik.BusJam.Core.Factories
             _characterPrefab = characterPrefab;
         }
 
-        public GameObject Create(CharacterColor color, Vector3 position)
+        public CharacterView  Create(CharacterColor color, Vector3 position, Vector2Int gridPosition)
         {
-            var characterInstance = _container.InstantiatePrefab(_characterPrefab, position, Quaternion.identity, null);
-            
-            // TODO: Set character color or other properties
+            var characterInstance = _container.InstantiatePrefabForComponent<CharacterView>(_characterPrefab, position, Quaternion.identity, null);
+            characterInstance.Initialize(color, gridPosition);
             
             return characterInstance;
         }

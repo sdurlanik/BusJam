@@ -21,6 +21,7 @@ namespace Sdurlanik.BusJam.Installers
             Container.DeclareSignal<LevelReadySignal>();
             Container.DeclareSignal<LevelSuccessSignal>();
             Container.DeclareSignal<LevelFailSignal>();
+            Container.DeclareSignal<CharacterClickedSignal>();
             
             Container.Bind<ICharacterFactory>().To<CharacterFactory>().AsSingle().WithArguments(_characterPrefab);
             Container.Bind<IObstacleFactory>().To<ObstacleFactory>().AsSingle().WithArguments(_obstaclePrefab);
