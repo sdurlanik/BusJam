@@ -101,5 +101,10 @@ namespace Sdurlanik.BusJam.MVC.Controllers
                 RemoveCharacterFromArea(character);
             }
         }
+        
+        public int GetWaitingCharacterCount()
+        {
+            return _slots.Count(character => character != null);
+        }
     }
 }

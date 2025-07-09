@@ -11,6 +11,6 @@ namespace Sdurlanik.BusJam.Core.Grid
         GameObject GetObjectAt(Vector2Int gridPosition);
         Vector3 GetWorldPosition(Vector2Int gridPosition, float yOffset = 0);
         List<Vector2Int> FindPath(Vector2Int startPosition, Vector2Int endPosition);
-
+        int GetOccupiedCellCount();
     }
 }

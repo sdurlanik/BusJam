@@ -1,4 +1,5 @@
 ﻿using Sdurlanik.BusJam.Controllers;
+using Sdurlanik.BusJam.Core;
 using Sdurlanik.BusJam.Core.BusSystem;
 using Sdurlanik.BusJam.Core.Grid;
 using Sdurlanik.BusJam.Core.Events;
@@ -30,7 +31,7 @@ namespace Sdurlanik.BusJam.Installers
             Container.DeclareSignal<LevelLoadRequestedSignal>();
             Container.DeclareSignal<LevelReadySignal>();
             Container.DeclareSignal<LevelSuccessSignal>();
-            Container.DeclareSignal<LevelFailSignal>();
+            Container.DeclareSignal<GameOverSignal>();
             Container.DeclareSignal<CharacterClickedSignal>();
             Container.DeclareSignal<BusArrivedSignal>();
             Container.DeclareSignal<BusFullSignal>();
@@ -49,6 +50,7 @@ namespace Sdurlanik.BusJam.Installers
             Container.Bind<IGrid>().To<Grid>().AsSingle();
             Container.Bind<ILevelController>().To<LevelController>().AsSingle().NonLazy();
             Container.BindInterfacesAndSelfTo<WaitingAreaController>().AsSingle().NonLazy();
+            Container.BindInterfacesAndSelfTo<GameStateManager>().AsSingle().NonLazy();
             Container.Bind<CharacterMovementController>().AsSingle().NonLazy();
 
         }

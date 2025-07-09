@@ -6,11 +6,11 @@ namespace Sdurlanik.BusJam.Core.Events
 {
     public struct LevelReadySignal
     {
-        public readonly Models.LevelSO LevelData;
-        public LevelReadySignal(Models.LevelSO levelData) => LevelData = levelData;
+        public readonly LevelSO LevelData;
+        public LevelReadySignal(LevelSO levelData) => LevelData = levelData;
     }
     public struct LevelSuccessSignal { }
-    public struct LevelFailSignal { }
+    public struct GameOverSignal { }
     
     public class LevelLoadRequestedSignal
     {
@@ -27,12 +27,12 @@ namespace Sdurlanik.BusJam.Core.Events
     public struct BusArrivedSignal
     {
         public readonly IBusController ArrivedBus;
-        public BusArrivedSignal(MVC.Controllers.IBusController bus) => ArrivedBus = bus;
+        public BusArrivedSignal(IBusController bus) => ArrivedBus = bus;
     }
 
     public struct BusFullSignal
     {
         public readonly IBusController FullBus;
-        public BusFullSignal(MVC.Controllers.IBusController bus) => FullBus = bus;
+        public BusFullSignal(IBusController bus) => FullBus = bus;
     }
 }

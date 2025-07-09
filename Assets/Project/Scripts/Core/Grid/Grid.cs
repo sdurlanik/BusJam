@@ -207,8 +207,20 @@ namespace Sdurlanik.BusJam.Core.Grid
                    gridPosition.y >= 0 && gridPosition.y < _height;
         }
         
-        public class Factory : PlaceholderFactory<int, int, Vector3, GameObject, Grid>
+        public int GetOccupiedCellCount()
         {
+            int count = 0;
+            for (int x = 0; x < _width; x++)
+            {
+                for (int y = 0; y < _height; y++)
+                {
+                    if (_gridObjects[x, y] != null)
+                    {
+                        count++;
+                    }
+                }
+            }
+            return count;
         }
     }
 }

@@ -43,6 +43,7 @@ namespace Sdurlanik.BusJam.MVC.Controllers
             if (reservedSlot == null)
             {
                 Debug.LogWarning("Path found on main grid, but no available slot in waiting area to reserve.");
+                _signalBus.Fire<GameOverSignal>();
                 return;
             }
 

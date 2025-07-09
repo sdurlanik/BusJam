@@ -10,5 +10,6 @@ namespace Sdurlanik.BusJam.MVC.Controllers
         UniTask FinalizeMoveToSlot(CharacterView character, Vector2Int reservedSlot);
         bool IsCharacterInArea(CharacterView character);
         void RemoveCharacterFromArea(CharacterView character);
+        int GetWaitingCharacterCount();
     }
 }
