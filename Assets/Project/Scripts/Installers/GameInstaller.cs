@@ -48,7 +48,7 @@ namespace Sdurlanik.BusJam.Installers
             
             Container.Bind<IGrid>().To<Grid>().AsSingle();
             Container.Bind<ILevelController>().To<LevelController>().AsSingle().NonLazy();
-            Container.Bind<IWaitingAreaController>().To<WaitingAreaController>().AsSingle().NonLazy();
+            Container.BindInterfacesAndSelfTo<WaitingAreaController>().AsSingle().NonLazy();
             Container.Bind<CharacterMovementController>().AsSingle().NonLazy();
 
         }

@@ -1,4 +1,5 @@
-﻿using Cysharp.Threading.Tasks;
+﻿using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using Sdurlanik.BusJam.Core.Grid;
 using Sdurlanik.BusJam.MVC.Views;
 using UnityEngine;
@@ -9,12 +10,14 @@ using Zenject;
 
 namespace Sdurlanik.BusJam.MVC.Controllers
 {
-    public class WaitingAreaController : IWaitingAreaController
+    public class WaitingAreaController : IWaitingAreaController, IInitializable
     {
         private readonly IGridSystemManager _gridSystemManager;
         private readonly IBusSystemManager _busSystemManager;
         private readonly SignalBus _signalBus;
         private readonly CharacterView[] _slots;
+        
+        private readonly HashSet<Vector2Int> _reservedSlots;
         
         public WaitingAreaController(IGridSystemManager gridSystemManager, GridConfiguration gridConfig, IBusSystemManager busSystemManager, SignalBus signalBus)
         {
@@ -22,6 +25,7 @@ namespace Sdurlanik.BusJam.MVC.Controllers
             _busSystemManager = busSystemManager;
             _signalBus = signalBus;
             _slots = new CharacterView[gridConfig.WaitingGridWidth];
+            _reservedSlots = new HashSet<Vector2Int>();
         }
         
         public void Initialize()
@@ -33,42 +37,47 @@ namespace Sdurlanik.BusJam.MVC.Controllers
             return _slots.Contains(character);
         }
 
+        public Vector2Int? ReserveNextAvailableSlot()
+        {
+            var grid = _gridSystemManager.WaitingAreaGrid;
+            for (int x = 0; x < _slots.Length; x++)
+            {
+                var cell = new Vector2Int(x, 0);
+                if (grid.IsCellAvailable(cell) && !_reservedSlots.Contains(cell))
+                {
+                    _reservedSlots.Add(cell);
+                    Debug.Log($"Waiting area slot {cell} has been reserved.");
+                    return cell;
+                }
+            }
+            return null;
+        }
         public void RemoveCharacterFromArea(CharacterView character)
         {
             int index = System.Array.IndexOf(_slots, character);
             if (index != -1)
             {
+                var gridPos = new Vector2Int(index, 0);
+                _gridSystemManager.WaitingAreaGrid.ClearCell(gridPos);
                 _slots[index] = null;
                 Debug.Log($"Character {character.name} removed from waiting area slot {index}.");
             }
-            
         }
-        public async UniTask AddCharacterToArea(CharacterView character)
+        public async UniTask FinalizeMoveToSlot(CharacterView character, Vector2Int reservedSlot)
         {
             var waitingGrid = _gridSystemManager.WaitingAreaGrid;
+            var targetPosition = waitingGrid.GetWorldPosition(reservedSlot, 0.5f);
             
-          var emptySlotIndex = FindEmptySlotIndex();
+            await character.MoveToPoint(targetPosition);
 
-            if (emptySlotIndex.HasValue)
-            {
-                var slotGridPosition = new Vector2Int(emptySlotIndex.Value, 0);
-                
-                var targetPosition = waitingGrid.GetWorldPosition(slotGridPosition, 0.5f);
-                
-                await character.MoveToPoint(targetPosition);
-                
-                waitingGrid.PlaceObject(character.gameObject, slotGridPosition);
-                character.UpdateGridPosition(slotGridPosition); 
-                _slots[emptySlotIndex.Value] = character; 
-                
-                Debug.Log($"Character {character.name} placed in waiting area slot {emptySlotIndex.Value}.");
-                CheckAndBoardCharacter(character);
-            }
-            else
-            {
-                Debug.LogError("Waiting area is full! GAME OVER logic should be triggered here.");
-                // TODO: fire GameOver signal or handle full waiting area logic
-            }
+            _reservedSlots.Remove(reservedSlot);
+            waitingGrid.PlaceObject(character.gameObject, reservedSlot);
+            _slots[reservedSlot.x] = character;
+            character.UpdateGridPosition(reservedSlot);
+            
+            Debug.Log($"Character {character.name} finalized move to waiting area slot {reservedSlot}.");
+
+            CheckAndBoardCharacter(character);
         }
         
         private void OnBusArrived(BusArrivedSignal signal)
@@ -91,18 +100,6 @@ namespace Sdurlanik.BusJam.MVC.Controllers
             {
                 RemoveCharacterFromArea(character);
             }
-        }
-        
-        private int? FindEmptySlotIndex()
-        {
-            for (int i = 0; i < _slots.Length; i++)
-            {
-                if (_slots[i] == null)
-                {
-                    return i;
-                }
-            }
-            return null; 
         }
     }
 }
