@@ -11,6 +11,8 @@ namespace Sdurlanik.BusJam.MVC.Views
     [RequireComponent(typeof(Collider))]
     public class CharacterView : MonoBehaviour
     {
+        public bool IsMoving { get; set; }
+        
         [Header("References")]
         [SerializeField] private MeshRenderer _meshRenderer;
 
