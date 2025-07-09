@@ -36,4 +36,4 @@ MonoBehaviour:
   - Color: 2
     GridPosition: {x: 4, y: 1}
   Obstacles: []
-  BusColorSequence: 
+  BusColorSequence: 0000000001000000

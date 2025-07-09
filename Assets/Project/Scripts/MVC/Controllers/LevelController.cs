@@ -50,7 +50,7 @@ namespace Sdurlanik.BusJam.Controllers
             }
 
             Debug.Log("Level Loaded Successfully. Firing LevelReadySignal.");
-            _signalBus.Fire<LevelReadySignal>();
+            _signalBus.Fire(new LevelReadySignal(levelData));
         }
     }
 }

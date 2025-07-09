@@ -465,6 +465,8 @@ MonoBehaviour:
     type: 3}
   _waitingAreaTilePrefab: {fileID: 995471777950965797, guid: 0fc3a416f0bf5444193073eedcd02455,
     type: 3}
+  _busPrefab: {fileID: 2030158678676546593, guid: 0e6da1ae194912047b9364d6f178fe70,
+    type: 3}
   _gridConfiguration: {fileID: 11400000, guid: ff8e65ccd804b1c48b1babadf38131a1, type: 2}
 --- !u!4 &1951325323
 Transform:
