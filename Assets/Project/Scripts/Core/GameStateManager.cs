@@ -26,6 +26,7 @@ namespace Sdurlanik.BusJam.Core
             _signalBus.Subscribe<GameOverSignal>(OnGameOver);
             _signalBus.Subscribe<LevelSuccessSignal>(OnLevelSuccess);
             _signalBus.Subscribe<BusFullSignal>(OnBusFull);
+            _signalBus.Subscribe<AllBusesDispatchedSignal>(OnAllBusesDispatched);
         }
 
         public void Dispose()
@@ -33,11 +34,17 @@ namespace Sdurlanik.BusJam.Core
             _signalBus.Unsubscribe<GameOverSignal>(OnGameOver);
             _signalBus.Unsubscribe<LevelSuccessSignal>(OnLevelSuccess);
             _signalBus.Unsubscribe<BusFullSignal>(OnBusFull);
+            _signalBus.Unsubscribe<AllBusesDispatchedSignal>(OnAllBusesDispatched);
         }
 
         private void OnBusFull()
         {
             CheckWinConditionAsync();
+        }
+        
+        private void OnAllBusesDispatched()
+        {
+            CheckForStuckCharactersAsync();
         }
 
         private async void CheckWinConditionAsync()
@@ -49,20 +56,34 @@ namespace Sdurlanik.BusJam.Core
 
             if (mainGridCount == 0 && waitingAreaCount == 0)
             {
+                Debug.Log("<color=green>LEVEL COMPLETE! - Pausing game and firing signal.</color>");
                 _signalBus.Fire<LevelSuccessSignal>();
             }
         }
 
+     
+        
+        private async void CheckForStuckCharactersAsync()
+        {
+            await UniTask.Yield();
+            
+            int mainGridCount = _gridSystemManager.MainGrid.GetOccupiedCellCount();
+            int waitingAreaCount = _waitingAreaController.GetWaitingCharacterCount();
+
+            if (mainGridCount > 0 || waitingAreaCount > 0)
+            {
+                Debug.LogWarning("All buses have left, but characters remain. GAME OVER.");
+                _signalBus.Fire<GameOverSignal>();
+            }
+        }
         private void OnGameOver()
         {
             Debug.Log("<color=red>GAME OVER! - Game is paused.</color>");
-            // TODO: "Game Over" UI panel will be activated here.
         }
-
+        
         private void OnLevelSuccess()
         {
             Debug.Log("<color=green>LEVEL COMPLETE! - Game is paused.</color>");
-            // TODO: "Tebrikler!" UI panel will be activated here.
         }
     }
 }

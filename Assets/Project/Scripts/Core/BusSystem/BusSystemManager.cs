@@ -10,7 +10,7 @@ using Zenject;
 
 namespace Sdurlanik.BusJam.Core.BusSystem
 {
-    public class BusSystemManager : IBusSystemManager, IInitializable
+    public class BusSystemManager : IBusSystemManager, IInitializable, IDisposable
     {
         public IBusController CurrentBus { get; private set; }
         
@@ -18,7 +18,7 @@ namespace Sdurlanik.BusJam.Core.BusSystem
         private readonly IBusFactory _busFactory;
         
         private Queue<CharacterColor> _busQueue;
-        private Vector3 _busStopPosition = new Vector3(2, 0.5f, 8); //TODO: Make this configurable
+        private Vector3 _busStopPosition;
 
         public BusSystemManager(SignalBus signalBus, IBusFactory busFactory)
         {
@@ -32,9 +32,16 @@ namespace Sdurlanik.BusJam.Core.BusSystem
             _signalBus.Subscribe<BusFullSignal>(OnBusFull);
         }
         
+        public void Dispose()
+        {
+            _signalBus.Unsubscribe<LevelReadySignal>(OnLevelReady);
+            _signalBus.Unsubscribe<BusFullSignal>(OnBusFull);
+        }
+        
         private void OnLevelReady(LevelReadySignal signal)
         {
             _busQueue = new Queue<CharacterColor>(signal.LevelData.BusColorSequence);
+            _busStopPosition = signal.LevelData.BusStopPosition;
             SpawnNextBus();
         }
 
@@ -49,8 +56,7 @@ namespace Sdurlanik.BusJam.Core.BusSystem
             else
             {
                 Debug.Log("No more buses in the queue. Level might be complete.");
-                // TODO: Handle end of level logic, such as notifying the player or transitioning to a new level.
-            }
+                _signalBus.Fire<AllBusesDispatchedSignal>();            }
         }
         
         private async void OnBusFull(BusFullSignal signal)

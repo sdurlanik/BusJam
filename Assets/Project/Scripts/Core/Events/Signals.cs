@@ -35,4 +35,12 @@ namespace Sdurlanik.BusJam.Core.Events
         public readonly IBusController FullBus;
         public BusFullSignal(IBusController bus) => FullBus = bus;
     }
+    
+    public struct AllBusesDispatchedSignal { }
+    
+    public struct TimerUpdatedSignal
+    {
+        public readonly float RemainingTime;
+        public TimerUpdatedSignal(float remainingTime) => RemainingTime = remainingTime;
+    }
 }

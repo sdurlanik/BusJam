@@ -5,7 +5,7 @@ using Sdurlanik.BusJam.Models;
 using UnityEngine;
 using Zenject;
 
-namespace Sdurlanik.BusJam.Controllers
+namespace Sdurlanik.BusJam.MVC.Controllers
 {
     public class LevelController : ILevelController
     {

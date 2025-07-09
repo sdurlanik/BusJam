@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6cad71c95ee42c08a70498469b12ddb, type: 3}
+  m_Name: PrefabConfiguration
+  m_EditorClassIdentifier: 
+  CharacterPrefab: {fileID: 2899515022793868174, guid: c56d3f1a754fb1d46bec6b4be423ab02,
+    type: 3}
+  ObstaclePrefab: {fileID: 0}
+  BusPrefab: {fileID: 2030158678676546593, guid: 0e6da1ae194912047b9364d6f178fe70,
+    type: 3}

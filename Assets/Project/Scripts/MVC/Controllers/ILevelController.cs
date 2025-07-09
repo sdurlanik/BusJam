@@ -1,6 +1,6 @@
 ﻿using Sdurlanik.BusJam.Models;
 
-namespace Sdurlanik.BusJam.Controllers
+namespace Sdurlanik.BusJam.MVC.Controllers
 {
     public interface ILevelController
     {
