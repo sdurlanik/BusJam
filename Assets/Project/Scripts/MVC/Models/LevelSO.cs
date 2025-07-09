@@ -39,7 +39,11 @@ namespace Sdurlanik.BusJam.Models
         [Header("Obstacle Placements")]
         public List<ObstaclePlacementData> Obstacles;
 
-        [Header("Bus Sequence")]
+        [Header("Bus Settings")]
         public List<CharacterColor> BusColorSequence;
+        public Vector3 BusStopPosition = new Vector3(2f, 0.5f, 8f);
+        
+        [Header("Level Constraints")]
+        public float TimeLimitInSeconds = 120f;
     }
 }
