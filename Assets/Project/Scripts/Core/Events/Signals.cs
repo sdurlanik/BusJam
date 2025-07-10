@@ -4,6 +4,8 @@ using Sdurlanik.BusJam.MVC.Views;
 
 namespace Sdurlanik.BusJam.Core.Events
 {
+    public struct StartGameRequestedSignal { }
+    
     public struct LevelReadySignal
     {
         public readonly LevelSO LevelData;
@@ -43,4 +45,14 @@ namespace Sdurlanik.BusJam.Core.Events
         public readonly float RemainingTime;
         public TimerUpdatedSignal(float remainingTime) => RemainingTime = remainingTime;
     }
+    
+    public struct ResetGameplaySignal { }
+
+    public struct NextLevelRequestedSignal { }
+    
+    public struct RestartLevelRequestedSignal{ }
+    
+    public struct WaitingAreaChangedSignal { }
+    
+    public struct LevelCompleteSequenceFinishedSignal { }
 }

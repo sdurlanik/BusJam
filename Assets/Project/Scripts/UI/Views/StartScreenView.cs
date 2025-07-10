@@ -9,7 +9,6 @@ namespace Sdurlanik.BusJam.UI.Views
     public class StartScreenView : MonoBehaviour
     {
         [SerializeField] private Button _startButton;
-        [SerializeField] private LevelSO _levelToLoad;
 
         private SignalBus _signalBus;
 
@@ -26,14 +25,7 @@ namespace Sdurlanik.BusJam.UI.Views
 
         private void OnStartButtonPressed()
         {
-            if (_levelToLoad != null)
-            {
-                _signalBus.Fire(new LevelLoadRequestedSignal(_levelToLoad));
-            }
-            else
-            {
-                Debug.LogError("Level to load is not assigned in StartScreenView!");
-            }
+            _signalBus.Fire<StartGameRequestedSignal>();
         }
         
         private void OnDestroy()

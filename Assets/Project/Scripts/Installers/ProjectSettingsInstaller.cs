@@ -8,6 +8,7 @@ namespace Sdurlanik.BusJam.Installers
     public class ProjectSettingsInstaller : MonoInstaller
     {
         [SerializeField] private GridConfiguration _gridConfiguration;
+        [SerializeField] private LevelProgressionSO _levelProgression;
         
         public override void InstallBindings()
         {
@@ -21,8 +22,15 @@ namespace Sdurlanik.BusJam.Installers
             Container.DeclareSignal<BusFullSignal>();
             Container.DeclareSignal<GameOverSignal>();
             Container.DeclareSignal<AllBusesDispatchedSignal>();
+            Container.DeclareSignal<ResetGameplaySignal>();
+            Container.DeclareSignal<NextLevelRequestedSignal>();
+            Container.DeclareSignal<StartGameRequestedSignal>();
+            Container.DeclareSignal<RestartLevelRequestedSignal>();
+            Container.DeclareSignal<WaitingAreaChangedSignal>();
+            Container.DeclareSignal<LevelCompleteSequenceFinishedSignal>();
             
             Container.Bind<GridConfiguration>().FromInstance(_gridConfiguration).AsSingle();
+            Container.Bind<LevelProgressionSO>().FromInstance(_levelProgression).AsSingle();
         }
     }
 }

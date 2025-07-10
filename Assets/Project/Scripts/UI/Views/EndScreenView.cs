@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Sdurlanik.BusJam.Core.Events;
+using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
 
@@ -39,18 +40,19 @@ namespace Sdurlanik.BusJam.UI.Views
             _winPanel.SetActive(didWin);
             _losePanel.SetActive(!didWin);
             _nextLevelButton.gameObject.SetActive(didWin);
+            _restartButton.gameObject.SetActive(!didWin);
         }
         
         private void OnNextLevelPressed()
         {
             Debug.Log("Next Level button pressed.");
-            // TODO: fire a signal to load the next level.
+            _signalBus.Fire<NextLevelRequestedSignal>();
         }
 
         private void OnRestartPressed()
         {
             Debug.Log("Restart button pressed.");
-            // TODO: fire a signal to restart the current level.
+            _signalBus.Fire<RestartLevelRequestedSignal>();
         }
     }
 }

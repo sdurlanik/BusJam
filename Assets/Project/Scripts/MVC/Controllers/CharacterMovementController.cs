@@ -2,6 +2,7 @@
 using System.Linq;
 using Sdurlanik.BusJam.Core.Grid;
 using Sdurlanik.BusJam.Core.Events;
+using Sdurlanik.BusJam.Core.Movement;
 using Sdurlanik.BusJam.MVC.Views;
 using UnityEngine;
 using Zenject;
@@ -13,12 +14,14 @@ namespace Sdurlanik.BusJam.MVC.Controllers
         private readonly SignalBus _signalBus;
         private readonly IGridSystemManager _gridSystemManager;
         private readonly IWaitingAreaController _waitingAreaController;
+        private readonly IMovementTracker _movementTracker;
 
-        public CharacterMovementController(SignalBus signalBus, IGridSystemManager gridSystemManager, IWaitingAreaController waitingAreaController)
+        public CharacterMovementController(SignalBus signalBus, IGridSystemManager gridSystemManager, IWaitingAreaController waitingAreaController, IMovementTracker movementTracker)
         {
             _signalBus = signalBus;
             _gridSystemManager = gridSystemManager;
             _waitingAreaController = waitingAreaController;
+            _movementTracker = movementTracker;
             
             _signalBus.Subscribe<CharacterClickedSignal>(OnCharacterClicked);
         }
@@ -43,7 +46,6 @@ namespace Sdurlanik.BusJam.MVC.Controllers
             if (reservedSlot == null)
             {
                 Debug.LogWarning("Path found on main grid, but no available slot in waiting area to reserve.");
-                _signalBus.Fire<GameOverSignal>();
                 return;
             }
 

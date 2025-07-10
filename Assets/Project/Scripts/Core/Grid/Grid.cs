@@ -222,5 +222,20 @@ namespace Sdurlanik.BusJam.Core.Grid
             }
             return count;
         }
+        
+        public void ClearAllCells()
+        {
+            for (int x = 0; x < _width; x++)
+            {
+                for (int y = 0; y < _height; y++)
+                {
+                    if (_gridObjects[x, y] != null)
+                    {
+                        GameObject.Destroy(_gridObjects[x, y]);
+                        _gridObjects[x, y] = null;
+                    }
+                }
+            }
+        }
     }
 }

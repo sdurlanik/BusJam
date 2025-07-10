@@ -27,8 +27,8 @@ namespace Sdurlanik.BusJam.UI.Views
 
         private void OnDisable()
         {
-            _signalBus.Unsubscribe<LevelReadySignal>(OnLevelReady);
-            _signalBus.Unsubscribe<TimerUpdatedSignal>(OnTimerUpdated);
+            _signalBus.TryUnsubscribe<LevelReadySignal>(OnLevelReady);
+            _signalBus.TryUnsubscribe<TimerUpdatedSignal>(OnTimerUpdated);
         }
 
         private void OnLevelReady(LevelReadySignal signal)

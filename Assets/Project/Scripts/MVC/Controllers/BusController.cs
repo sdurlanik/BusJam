@@ -27,19 +27,29 @@ namespace Sdurlanik.BusJam.MVC.Controllers
             
             await View.AnimateArrival(arrivalPosition);
         }
+        
+        public bool HasSpace()
+        {
+            return _model.HasSpace();
+        }
 
-        public bool TryBoardCharacter(CharacterView character)
+        public CharacterColor GetColor()
+        {
+            return _model.BusColor;
+        }
+        
+        public async UniTask<bool> TryBoardCharacter(CharacterView character)
         {
             if (!_model.HasSpace() || !_model.IsColorMatch(character.Color))
             {
                 return false;
             }
             
-            BoardCharacterAsync(character);
+            await BoardCharacterAsync(character);
             return true;
         }
 
-        private async void BoardCharacterAsync(CharacterView character)
+        private async UniTask BoardCharacterAsync(CharacterView character)
         {
             var slotIndex = _model.Passengers.Count;
             var slotTransform = View.GetSlotTransform(slotIndex);

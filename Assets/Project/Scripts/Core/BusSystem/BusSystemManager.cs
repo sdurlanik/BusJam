@@ -7,6 +7,7 @@ using Sdurlanik.BusJam.Models;
 using Sdurlanik.BusJam.MVC.Controllers;
 using UnityEngine;
 using Zenject;
+using Object = UnityEngine.Object;
 
 namespace Sdurlanik.BusJam.Core.BusSystem
 {
@@ -30,12 +31,14 @@ namespace Sdurlanik.BusJam.Core.BusSystem
         {
             _signalBus.Subscribe<LevelReadySignal>(OnLevelReady);
             _signalBus.Subscribe<BusFullSignal>(OnBusFull);
+            _signalBus.Subscribe<ResetGameplaySignal>(Reset);
         }
         
         public void Dispose()
         {
-            _signalBus.Unsubscribe<LevelReadySignal>(OnLevelReady);
-            _signalBus.Unsubscribe<BusFullSignal>(OnBusFull);
+            _signalBus.TryUnsubscribe<LevelReadySignal>(OnLevelReady);
+            _signalBus.TryUnsubscribe<BusFullSignal>(OnBusFull);
+            _signalBus.TryUnsubscribe<ResetGameplaySignal>(Reset);
         }
         
         private void OnLevelReady(LevelReadySignal signal)
@@ -69,6 +72,17 @@ namespace Sdurlanik.BusJam.Core.BusSystem
             
                 SpawnNextBus();
             }
+        }
+        
+        public void Reset()
+        {
+            if (CurrentBus != null && CurrentBus.View != null)
+            {
+                Object.Destroy(CurrentBus.View.gameObject);
+            }
+            CurrentBus = null;
+            _busQueue?.Clear();
+            Debug.Log("BusSystemManager Reset.");
         }
     }
 }

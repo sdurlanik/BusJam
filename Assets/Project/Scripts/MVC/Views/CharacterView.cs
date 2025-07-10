@@ -2,6 +2,7 @@
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Sdurlanik.BusJam.Core.Events;
+using Sdurlanik.BusJam.Core.Movement;
 using Sdurlanik.BusJam.Models;
 using UnityEngine;
 using Zenject;
@@ -12,33 +13,35 @@ namespace Sdurlanik.BusJam.MVC.Views
     public class CharacterView : MonoBehaviour
     {
         public bool IsMoving { get; set; }
-        
-        [Header("References")]
-        [SerializeField] private MeshRenderer _meshRenderer;
+
+        [Header("References")] [SerializeField]
+        private MeshRenderer _meshRenderer;
 
         private SignalBus _signalBus;
-        
+        private IMovementTracker _movementTracker;
+
         public CharacterColor Color { get; private set; }
         public Vector2Int GridPosition { get; private set; }
 
         [Inject]
-        public void Construct(SignalBus signalBus)
+        public void Construct(SignalBus signalBus, IMovementTracker movementTracker)
         {
             _signalBus = signalBus;
+            _movementTracker = movementTracker;
         }
 
         public void Initialize(CharacterColor color, Vector2Int gridPosition)
         {
             Color = color;
             GridPosition = gridPosition;
-            
+
             SetVisualColor(color);
         }
 
         private void OnMouseDown()
         {
             Debug.Log($"Character clicked at {GridPosition} with color {Color}");
-            
+
             _signalBus.Fire(new CharacterClickedSignal(this));
         }
 
@@ -48,38 +51,64 @@ namespace Sdurlanik.BusJam.MVC.Views
             var materialColor = UnityEngine.Color.white;
             switch (color)
             {
-                case CharacterColor.Red: materialColor = UnityEngine.Color.red; break;
-                case CharacterColor.Green: materialColor = UnityEngine.Color.green; break;
-                case CharacterColor.Blue: materialColor = UnityEngine.Color.blue; break;
-                case CharacterColor.Yellow: materialColor = UnityEngine.Color.yellow; break;
-                case CharacterColor.Purple: materialColor = new UnityEngine.Color(0.5f, 0, 0.5f); break;
-            }
-            _meshRenderer.material.color = materialColor;
-        }
-        public async UniTask MoveAlongPath(List<Vector2Int> path)
-        {
-            var sequence = DOTween.Sequence();
-            
-            foreach (var gridPos in path)
-            {
-                var worldPosition = new Vector3(gridPos.x, transform.position.y, gridPos.y);
-                
-                sequence.Append(transform.DOMove(worldPosition, 0.2f).SetEase(Ease.Linear));
+                case CharacterColor.Red:
+                    materialColor = UnityEngine.Color.red;
+                    break;
+                case CharacterColor.Green:
+                    materialColor = UnityEngine.Color.green;
+                    break;
+                case CharacterColor.Blue:
+                    materialColor = UnityEngine.Color.blue;
+                    break;
+                case CharacterColor.Yellow:
+                    materialColor = UnityEngine.Color.yellow;
+                    break;
+                case CharacterColor.Purple:
+                    materialColor = new UnityEngine.Color(0.5f, 0, 0.5f);
+                    break;
             }
 
-            await sequence.Play().ToUniTask();
-            
-            Debug.Log("Movement sequence completed!");
+            _meshRenderer.material.color = materialColor;
         }
-        
+
+        public async UniTask MoveAlongPath(List<Vector2Int> path)
+        {
+            _movementTracker.RegisterMovement();
+
+            try
+            {
+                var sequence = DOTween.Sequence();
+                for (var i = 0; i < path.Count; i++)
+                {
+                    var gridPos = path[i];
+                    var worldPosition = new Vector3(gridPos.x, transform.position.y, gridPos.y);
+                    sequence.Append(transform.DOMove(worldPosition, 0.2f).SetEase(Ease.Linear));
+                }
+
+                await sequence.Play().ToUniTask();
+            }
+            finally
+            {
+                _movementTracker.UnregisterMovement();
+            }
+        }
+
         public void UpdateGridPosition(Vector2Int newPosition)
         {
             GridPosition = newPosition;
         }
-        
+
         public async UniTask MoveToPoint(Vector3 worldPosition)
         {
-            await transform.DOMove(worldPosition, 0.3f).SetEase(Ease.OutQuad).ToUniTask();
+            _movementTracker.RegisterMovement();
+            try
+            {
+                await transform.DOMove(worldPosition, 0.3f).SetEase(Ease.OutQuad).ToUniTask();
+            }
+            finally
+            {
+                _movementTracker.UnregisterMovement();
+            }
         }
     }
 }

@@ -1707,7 +1707,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _startButton: {fileID: 1196094345}
-  _levelToLoad: {fileID: 11400000, guid: 7313915814c9aa546b348ea4f19fa209, type: 2}
 --- !u!114 &1683796434
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1755,7 +1754,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1951325323}
-  - component: {fileID: 1951325324}
   - component: {fileID: 1951325325}
   - component: {fileID: 1951325329}
   - component: {fileID: 1951325328}
@@ -1783,19 +1781,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1951325324
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1951325321}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c7d03908dc7d46f1976100fc25332645, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _startingLevel: {fileID: 11400000, guid: 7313915814c9aa546b348ea4f19fa209, type: 2}
 --- !u!114 &1951325325
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1844,6 +1829,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _gridConfiguration: {fileID: 11400000, guid: ff8e65ccd804b1c48b1babadf38131a1, type: 2}
+  _levelProgression: {fileID: 11400000, guid: ddd83b6d75d35d148b93d05e955bd61a, type: 2}
 --- !u!114 &1951325327
 MonoBehaviour:
   m_ObjectHideFlags: 0

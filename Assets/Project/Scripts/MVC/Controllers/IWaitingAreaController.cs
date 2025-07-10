@@ -1,4 +1,5 @@
-﻿using Cysharp.Threading.Tasks;
+﻿using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using Sdurlanik.BusJam.MVC.Views;
 using UnityEngine;
 
@@ -11,5 +12,8 @@ namespace Sdurlanik.BusJam.MVC.Controllers
         bool IsCharacterInArea(CharacterView character);
         void RemoveCharacterFromArea(CharacterView character);
         int GetWaitingCharacterCount();
+        void Reset();
+        bool IsFull();
+        IReadOnlyList<CharacterView> GetWaitingCharacters();
     }
 }

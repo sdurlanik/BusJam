@@ -4,5 +4,6 @@
     {
         IGrid MainGrid { get; }
         IGrid WaitingAreaGrid { get; }
+        void Reset();
     }
 }
