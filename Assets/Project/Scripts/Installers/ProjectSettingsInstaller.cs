@@ -28,6 +28,7 @@ namespace Sdurlanik.BusJam.Installers
             Container.DeclareSignal<RestartLevelRequestedSignal>();
             Container.DeclareSignal<WaitingAreaChangedSignal>();
             Container.DeclareSignal<LevelCompleteSequenceFinishedSignal>();
+            Container.DeclareSignal<TimeIsUpSignal>();
             
             Container.Bind<GridConfiguration>().FromInstance(_gridConfiguration).AsSingle();
             Container.Bind<LevelProgressionSO>().FromInstance(_levelProgression).AsSingle();

@@ -9,6 +9,7 @@ using System.Linq;
 using DG.Tweening;
 using Sdurlanik.BusJam.Core.BusSystem;
 using Sdurlanik.BusJam.Core.Movement;
+using Sdurlanik.BusJam.Core.State;
 
 namespace Sdurlanik.BusJam.Core
 {
@@ -19,41 +20,57 @@ namespace Sdurlanik.BusJam.Core
         private readonly IBusSystemManager _busSystemManager;
         private readonly IWaitingAreaController _waitingAreaController;
         private readonly IMovementTracker _movementTracker;
+        private readonly IGameplayStateHolder _gameplayStateHolder;
+        private readonly ITimerController _timerController;
         
         private bool _isLevelWon = false;
+        private bool _isLevelLost = false;
+
+        private bool IsGameResolved => _isLevelWon || _isLevelLost;
         
-        public GameStateManager(SignalBus signalBus, IGridSystemManager gridSystemManager, IWaitingAreaController waitingAreaController, IMovementTracker movementTracker, IBusSystemManager busSystemManager)
+        public GameStateManager(SignalBus signalBus, IGridSystemManager gridSystemManager, IWaitingAreaController waitingAreaController, IMovementTracker movementTracker, IBusSystemManager busSystemManager, IGameplayStateHolder gameplayStateHolder, ITimerController timerController)
         {
             _signalBus = signalBus;
             _gridSystemManager = gridSystemManager;
             _waitingAreaController = waitingAreaController;
             _movementTracker = movementTracker;
             _busSystemManager = busSystemManager;
+            _gameplayStateHolder = gameplayStateHolder;
+            _timerController = timerController;
         }
 
         public void Initialize()
         {
             _isLevelWon = false;
+            _gameplayStateHolder.Resume();
             
-            _signalBus.Subscribe<GameOverSignal>(OnGameOver);
-            _signalBus.Subscribe<LevelSuccessSignal>(OnLevelSuccess);
             _signalBus.Subscribe<BusFullSignal>(OnBusFull);
             _signalBus.Subscribe<AllBusesDispatchedSignal>(OnAllBusesDispatched);
-            _signalBus.Subscribe<RestartLevelRequestedSignal>(OnRestartLevelRequested);
+            _signalBus.Subscribe<RestartLevelRequestedSignal>(OnNewLevelSequenceRequested);
+            _signalBus.Subscribe<NextLevelRequestedSignal>(OnNewLevelSequenceRequested);
             _signalBus.Subscribe<BusArrivedSignal>(OnBusArrived);
+            _signalBus.Subscribe<TimeIsUpSignal>(OnTimeIsUp);
         }
 
         public void Dispose()
         {
-            _signalBus.TryUnsubscribe<GameOverSignal>(OnGameOver);
-            _signalBus.TryUnsubscribe<LevelSuccessSignal>(OnLevelSuccess);
             _signalBus.TryUnsubscribe<BusFullSignal>(OnBusFull);
             _signalBus.TryUnsubscribe<AllBusesDispatchedSignal>(OnAllBusesDispatched);
-            _signalBus.TryUnsubscribe<RestartLevelRequestedSignal>(OnRestartLevelRequested);
+            _signalBus.TryUnsubscribe<RestartLevelRequestedSignal>(OnNewLevelSequenceRequested);
+            _signalBus.TryUnsubscribe<NextLevelRequestedSignal>(OnNewLevelSequenceRequested);
             _signalBus.TryUnsubscribe<BusArrivedSignal>(OnBusArrived);
+            _signalBus.TryUnsubscribe<TimeIsUpSignal>(OnTimeIsUp);
+        }
+        
+        private void OnTimeIsUp()
+        {
+            ProcessGameOverState();
         }
 
-        private void OnBusFull() => CheckWinCondition();
+        private void OnBusFull()
+        {
+            CheckWinCondition();  
+        } 
 
         private void OnBusArrived() => CheckForWaitingAreaDeadlock();
         
@@ -64,72 +81,82 @@ namespace Sdurlanik.BusJam.Core
                 _signalBus.Fire<LevelCompleteSequenceFinishedSignal>();
                 return;
             }
-            
-            CheckForStuckCharactersAsync();  
+    
+            CheckForStuckCharacters(); 
         } 
         
-        private async void CheckWinCondition()
+        private void CheckWinCondition()
         {
-            await UniTask.Yield();
-            
-            int mainGridCount = _gridSystemManager.MainGrid.GetOccupiedCellCount();
-            int waitingAreaCount = _waitingAreaController.GetWaitingCharacterCount();
+            if (!_gameplayStateHolder.IsGameplayActive) return;
 
+            var mainGridCount = _gridSystemManager.MainGrid.GetOccupiedCellCount();
+            var waitingAreaCount = _waitingAreaController.GetWaitingCharacterCount();
+
+            
             if (mainGridCount == 0 && waitingAreaCount == 0)
             {
-                if (_isLevelWon) return;
-                
-                _isLevelWon = true;
-                _signalBus.Fire<LevelSuccessSignal>();
+                ProcessWinState();
             }
         }
         
-        private async  void CheckForStuckCharactersAsync()
+        private void CheckForStuckCharacters()
         {
-            await UniTask.Yield();
+            if (!_gameplayStateHolder.IsGameplayActive) return;
 
-            int mainGridCount = _gridSystemManager.MainGrid.GetOccupiedCellCount();
-            int waitingAreaCount = _waitingAreaController.GetWaitingCharacterCount();
+            var mainGridCount = _gridSystemManager.MainGrid.GetOccupiedCellCount();
+            var waitingAreaCount = _waitingAreaController.GetWaitingCharacterCount();
 
             if (mainGridCount > 0 || waitingAreaCount > 0)
             {
-                _signalBus.Fire<GameOverSignal>();
+                ProcessGameOverState();
             }
         }
         
         private void CheckForWaitingAreaDeadlock()
         {
-        
+            if (!_gameplayStateHolder.IsGameplayActive) return;
             if (!_waitingAreaController.IsFull()) return;
 
             var currentBus = _busSystemManager.CurrentBus;
             if (currentBus == null) return;
-            
+
+
             var busColor = currentBus.GetColor();
             bool canAnyoneBoard = _waitingAreaController.GetWaitingCharacters().Any(c => c != null && c.Color == busColor);
 
             if (!canAnyoneBoard)
             {
-                Debug.LogWarning("Deadlock: Waiting area is full and no character can board. GAME OVER.");
-                _signalBus.Fire<GameOverSignal>();
+                ProcessGameOverState();
             }
         }
         
-        private void OnGameOver()
+        private void ProcessGameOverState()
         {
-            Debug.Log("<color=red>GAME OVER! - Game is paused.</color>");
+            if (!_gameplayStateHolder.IsGameplayActive) return;
+            
+            _gameplayStateHolder.Pause();
+            _timerController.Stop();
+            
+            _signalBus.Fire<GameOverSignal>();
         }
         
-        private void OnLevelSuccess()
+        private void ProcessWinState()
         {
-            Debug.Log("<color=green>LEVEL COMPLETE! - Game is paused.</color>");
+            if (!_gameplayStateHolder.IsGameplayActive) return;
+
+            _gameplayStateHolder.Pause();
+            _timerController.Stop();
+            _isLevelWon = true;
+
+            _signalBus.Fire<LevelSuccessSignal>();
         }
         
-        private void OnRestartLevelRequested()
+        private void OnNewLevelSequenceRequested()
         {
+            _gameplayStateHolder.Resume();
             DOTween.KillAll();
             _movementTracker.Reset();
-            Debug.Log("GameStateManager: Restart request received.");
+
         }
     }
 }

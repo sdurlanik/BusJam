@@ -8,7 +8,8 @@ namespace Sdurlanik.BusJam.MVC.Controllers
     public interface IBusController
     {
         BusView View { get; }
-        UniTask<bool> TryBoardCharacter(CharacterView character);
+        bool CanBoard(CharacterView character);
+        UniTask BoardCharacterAsync(CharacterView character);
         UniTask  Initialize(Vector3 arrivalPosition);
         bool HasSpace();
         CharacterColor GetColor();

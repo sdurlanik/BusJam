@@ -2,6 +2,7 @@
 using Sdurlanik.BusJam.Core.BusSystem;
 using Sdurlanik.BusJam.Core.Grid;
 using Sdurlanik.BusJam.Core.Movement;
+using Sdurlanik.BusJam.Core.State;
 using Sdurlanik.BusJam.MVC.Controllers;
 using Zenject;
 
@@ -20,6 +21,7 @@ namespace Sdurlanik.BusJam.Installers
             Container.BindInterfacesAndSelfTo<LevelProgressionManager>().AsSingle().NonLazy();
             Container.BindInterfacesAndSelfTo<TimerController>().AsSingle();
             Container.BindInterfacesAndSelfTo<MovementTracker>().AsSingle();
+            Container.BindInterfacesAndSelfTo<GameplayStateHolder>().AsSingle();
         }
     }
 }

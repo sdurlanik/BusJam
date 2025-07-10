@@ -1,38 +1,38 @@
 ﻿using System;
 using Sdurlanik.BusJam.Core.Events;
+using Sdurlanik.BusJam.Core.State;
 using UnityEngine;
 using Zenject;
 
 namespace Sdurlanik.BusJam.Core
 {
-    public class TimerController : ITickable, IInitializable, IDisposable
+    public class TimerController : ITickable,ITimerController, IInitializable, IDisposable
     {
         private readonly SignalBus _signalBus;
+        private readonly IGameplayStateHolder _gameplayStateHolder;
+        
         private float _remainingTime;
         private bool _isTimerRunning;
         
         private float _updateTimer;
         private const float UPDATE_INTERVAL = 1f;
 
-        public TimerController(SignalBus signalBus)
+        public TimerController(SignalBus signalBus, IGameplayStateHolder gameplayStateHolder)
         {
             _signalBus = signalBus;
+            _gameplayStateHolder = gameplayStateHolder;
         }
         
         public void Initialize()
         {
             _signalBus.Subscribe<LevelReadySignal>(OnLevelReady);
-            _signalBus.Subscribe<GameOverSignal>(StopTimer);
-            _signalBus.Subscribe<LevelSuccessSignal>(StopTimer);
-            _signalBus.Subscribe<ResetGameplaySignal>(StopTimer);
+            _signalBus.Subscribe<ResetGameplaySignal>(Stop);
         }
         
         public void Dispose()
         {
             _signalBus.TryUnsubscribe<LevelReadySignal>(OnLevelReady);
-            _signalBus.TryUnsubscribe<GameOverSignal>(StopTimer);
-            _signalBus.TryUnsubscribe<LevelSuccessSignal>(StopTimer);
-            _signalBus.TryUnsubscribe<ResetGameplaySignal>(StopTimer);
+            _signalBus.TryUnsubscribe<ResetGameplaySignal>(Stop);
         }
         
         private void OnLevelReady(LevelReadySignal signal)
@@ -42,15 +42,14 @@ namespace Sdurlanik.BusJam.Core
             _updateTimer = UPDATE_INTERVAL;
         }
 
-        private void StopTimer()
+        public void Stop()
         {
             _isTimerRunning = false;
-            Debug.Log("Timer Stopped/Reset.");
         }
 
         public void Tick()
         {
-            if (!_isTimerRunning) return;
+            if (!_isTimerRunning || !_gameplayStateHolder.IsGameplayActive) return;
 
             if (_remainingTime > 0)
             {
@@ -63,16 +62,13 @@ namespace Sdurlanik.BusJam.Core
                     _signalBus.Fire(new TimerUpdatedSignal(_remainingTime));
                 }
             }
-            else
-            {
-                _remainingTime = 0;
-                _isTimerRunning = false;
-                
-                _signalBus.Fire(new TimerUpdatedSignal(_remainingTime));
 
-                Debug.Log("Time is up! Firing GameOverSignal.");
-                _signalBus.Fire<GameOverSignal>();
-            }
+            if (!(_remainingTime <= 0)) return;
+            if (!_isTimerRunning) return;
+                
+            Stop();
+
+            _signalBus.Fire<TimeIsUpSignal>(); 
         }
     }
 }

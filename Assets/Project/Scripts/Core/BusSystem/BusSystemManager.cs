@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Sdurlanik.BusJam.Core.Events;
 using Sdurlanik.BusJam.Core.Factories;
+using Sdurlanik.BusJam.Core.State;
 using Sdurlanik.BusJam.Models;
 using Sdurlanik.BusJam.MVC.Controllers;
 using UnityEngine;
@@ -14,17 +15,20 @@ namespace Sdurlanik.BusJam.Core.BusSystem
     public class BusSystemManager : IBusSystemManager, IInitializable, IDisposable
     {
         public IBusController CurrentBus { get; private set; }
+        private readonly IGameplayStateHolder _gameplayStateHolder;
         
         private readonly SignalBus _signalBus;
         private readonly IBusFactory _busFactory;
         
         private Queue<CharacterColor> _busQueue;
         private Vector3 _busStopPosition;
+        private bool _isBusDeparting = false;
 
-        public BusSystemManager(SignalBus signalBus, IBusFactory busFactory)
+        public BusSystemManager(SignalBus signalBus, IBusFactory busFactory, IGameplayStateHolder gameplayStateHolder)
         {
             _signalBus = signalBus;
             _busFactory = busFactory;
+            _gameplayStateHolder = gameplayStateHolder;
         }
 
         public void Initialize()
@@ -58,20 +62,23 @@ namespace Sdurlanik.BusJam.Core.BusSystem
             }
             else
             {
-                Debug.Log("No more buses in the queue. Level might be complete.");
-                _signalBus.Fire<AllBusesDispatchedSignal>();            }
+                _signalBus.Fire<AllBusesDispatchedSignal>();
+            }
         }
         
         private async void OnBusFull(BusFullSignal signal)
         {
-            if (signal.FullBus == CurrentBus)
-            {
-                await UniTask.Delay(TimeSpan.FromSeconds(1));
-                await CurrentBus.View.AnimateDeparture();
-                CurrentBus = null;
+            if (_isBusDeparting || signal.FullBus != CurrentBus) return;
             
-                SpawnNextBus();
-            }
+            _isBusDeparting = true;
+    
+            await UniTask.Delay(TimeSpan.FromSeconds(1));
+            await CurrentBus.View.AnimateDeparture();
+            CurrentBus = null;
+
+            _isBusDeparting = false; 
+
+            SpawnNextBus();
         }
         
         public void Reset()
@@ -82,7 +89,6 @@ namespace Sdurlanik.BusJam.Core.BusSystem
             }
             CurrentBus = null;
             _busQueue?.Clear();
-            Debug.Log("BusSystemManager Reset.");
         }
     }
 }

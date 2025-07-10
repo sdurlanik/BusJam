@@ -1,5 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using Sdurlanik.BusJam.Core.Events;
+using Sdurlanik.BusJam.Core.State;
 using Sdurlanik.BusJam.Models;
 using Sdurlanik.BusJam.MVC.Models;
 using Sdurlanik.BusJam.MVC.Views;
@@ -13,12 +14,14 @@ namespace Sdurlanik.BusJam.MVC.Controllers
         private readonly SignalBus _signalBus;
         public BusView View { get; }
         private readonly BusModel _model;
+        private readonly IGameplayStateHolder _gameplayStateHolder;
 
-        public BusController(BusModel model, BusView view, SignalBus signalBus)
+        public BusController(BusModel model, BusView view, SignalBus signalBus, IGameplayStateHolder gameplayStateHolder)
         {
             _model = model;
             View = view;
             _signalBus = signalBus;
+            _gameplayStateHolder = gameplayStateHolder;
         }
         
         public async UniTask Initialize(Vector3 arrivalPosition)
@@ -38,18 +41,12 @@ namespace Sdurlanik.BusJam.MVC.Controllers
             return _model.BusColor;
         }
         
-        public async UniTask<bool> TryBoardCharacter(CharacterView character)
+        public bool CanBoard(CharacterView character)
         {
-            if (!_model.HasSpace() || !_model.IsColorMatch(character.Color))
-            {
-                return false;
-            }
-            
-            await BoardCharacterAsync(character);
-            return true;
+            return _model.HasSpace() && _model.IsColorMatch(character.Color);
         }
-
-        private async UniTask BoardCharacterAsync(CharacterView character)
+        
+        public  async UniTask BoardCharacterAsync(CharacterView character)
         {
             var slotIndex = _model.Passengers.Count;
             var slotTransform = View.GetSlotTransform(slotIndex);
@@ -61,7 +58,7 @@ namespace Sdurlanik.BusJam.MVC.Controllers
             
             if (!_model.HasSpace())
             {
-                Debug.Log("Bus is full!");
+                if (!_gameplayStateHolder.IsGameplayActive) return;
                 _signalBus.Fire(new BusFullSignal(this));
             }
         }

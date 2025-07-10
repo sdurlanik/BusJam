@@ -55,4 +55,5 @@ namespace Sdurlanik.BusJam.Core.Events
     public struct WaitingAreaChangedSignal { }
     
     public struct LevelCompleteSequenceFinishedSignal { }
+    public struct TimeIsUpSignal { }
 }

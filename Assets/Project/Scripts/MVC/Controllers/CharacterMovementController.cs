@@ -3,6 +3,7 @@ using System.Linq;
 using Sdurlanik.BusJam.Core.Grid;
 using Sdurlanik.BusJam.Core.Events;
 using Sdurlanik.BusJam.Core.Movement;
+using Sdurlanik.BusJam.Core.State;
 using Sdurlanik.BusJam.MVC.Views;
 using UnityEngine;
 using Zenject;
@@ -14,20 +15,26 @@ namespace Sdurlanik.BusJam.MVC.Controllers
         private readonly SignalBus _signalBus;
         private readonly IGridSystemManager _gridSystemManager;
         private readonly IWaitingAreaController _waitingAreaController;
-        private readonly IMovementTracker _movementTracker;
+        private readonly IGameplayStateHolder _gameplayStateHolder;
 
-        public CharacterMovementController(SignalBus signalBus, IGridSystemManager gridSystemManager, IWaitingAreaController waitingAreaController, IMovementTracker movementTracker)
+        public CharacterMovementController(SignalBus signalBus, IGridSystemManager gridSystemManager,
+            IWaitingAreaController waitingAreaController, IGameplayStateHolder gameplayStateHolder)
         {
             _signalBus = signalBus;
             _gridSystemManager = gridSystemManager;
             _waitingAreaController = waitingAreaController;
-            _movementTracker = movementTracker;
-            
+            _gameplayStateHolder = gameplayStateHolder;
+
             _signalBus.Subscribe<CharacterClickedSignal>(OnCharacterClicked);
         }
 
-            private async void OnCharacterClicked(CharacterClickedSignal signal)
+        private async void OnCharacterClicked(CharacterClickedSignal signal)
         {
+            if (!_gameplayStateHolder.IsGameplayActive)
+            {
+                return;
+            }
+            
             var character = signal.ClickedCharacter;
 
             if (character.IsMoving)
@@ -41,11 +48,10 @@ namespace Sdurlanik.BusJam.MVC.Controllers
             {
                 return;
             }
-            
+
             var reservedSlot = _waitingAreaController.ReserveNextAvailableSlot();
             if (reservedSlot == null)
             {
-                Debug.LogWarning("Path found on main grid, but no available slot in waiting area to reserve.");
                 return;
             }
 
@@ -53,11 +59,11 @@ namespace Sdurlanik.BusJam.MVC.Controllers
             try
             {
                 var startPos = character.GridPosition;
-                
+
                 mainGrid.ClearCell(startPos);
-                
+
                 await character.MoveAlongPath(path);
-                
+
                 await _waitingAreaController.FinalizeMoveToSlot(character, reservedSlot.Value);
             }
             finally
@@ -80,7 +86,7 @@ namespace Sdurlanik.BusJam.MVC.Controllers
                     shortestPath = foundPath;
                 }
             }
-            
+
             return (shortestPath != null && shortestPath.Count > 1) ? shortestPath : null;
         }
 
@@ -88,8 +94,8 @@ namespace Sdurlanik.BusJam.MVC.Controllers
         {
             var exits = new List<Vector2Int>();
             int topRow = 4;
-            int gridWidth = 5; 
-            for (int i = 0; i < gridWidth; i++) 
+            int gridWidth = 5;
+            for (int i = 0; i < gridWidth; i++)
             {
                 var exitPos = new Vector2Int(i, topRow);
                 if (grid.IsCellAvailable(exitPos))
@@ -97,6 +103,7 @@ namespace Sdurlanik.BusJam.MVC.Controllers
                     exits.Add(exitPos);
                 }
             }
+
             return exits;
         }
     }

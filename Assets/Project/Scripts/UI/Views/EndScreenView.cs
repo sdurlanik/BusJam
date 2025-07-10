@@ -51,7 +51,7 @@ namespace Sdurlanik.BusJam.UI.Views
 
         private void OnRestartPressed()
         {
-            Debug.Log("Restart button pressed.");
+            Debug.Log("--- Restart Button Pressed: Firing RestartLevelRequestedSignal ---");
             _signalBus.Fire<RestartLevelRequestedSignal>();
         }
     }

@@ -54,7 +54,6 @@ namespace Sdurlanik.BusJam.MVC.Controllers
                 if (grid.IsCellAvailable(cell) && !_reservedSlots.Contains(cell))
                 {
                     _reservedSlots.Add(cell);
-                    Debug.Log($"Waiting area slot {cell} has been reserved.");
                     return cell;
                 }
             }
@@ -68,7 +67,6 @@ namespace Sdurlanik.BusJam.MVC.Controllers
                 var gridPos = new Vector2Int(index, 0);
                 _gridSystemManager.WaitingAreaGrid.ClearCell(gridPos);
                 _slots[index] = null;
-                Debug.Log($"Character {character.name} removed from waiting area slot {index}.");
             }
         }
         public async UniTask FinalizeMoveToSlot(CharacterView character, Vector2Int reservedSlot)
@@ -83,14 +81,11 @@ namespace Sdurlanik.BusJam.MVC.Controllers
             _slots[reservedSlot.x] = character;
             character.UpdateGridPosition(reservedSlot);
             
-            Debug.Log($"Character {character.name} finalized move to waiting area slot {reservedSlot}.");
-
             await CheckAndBoardCharacter(character);
         }
         
         private async void OnBusArrived(BusArrivedSignal signal)
         {
-            Debug.Log("New bus arrived, checking waiting area for passengers...");
             var waitingCharacters = _slots.Where(c => c != null).ToList();
            
             foreach (var character in waitingCharacters)
@@ -102,24 +97,23 @@ namespace Sdurlanik.BusJam.MVC.Controllers
 
                 await CheckAndBoardCharacter(character);
             }
-            Debug.Log("Sequential boarding check finished.");
         }
         
-        private async UniTask<bool>  CheckAndBoardCharacter(CharacterView character)
+        private async UniTask<bool> CheckAndBoardCharacter(CharacterView character)
         {
             var currentBus = _busSystemManager.CurrentBus;
-            if (currentBus == null)
-            {
-                return false;
-            }
+            if (currentBus == null) return false;
 
-            bool success = await currentBus.TryBoardCharacter(character);
-            if (success)
+            if (currentBus.CanBoard(character))
             {
                 RemoveCharacterFromArea(character);
+        
+                await currentBus.BoardCharacterAsync(character);
+        
+                return true;
             }
 
-            return success;
+            return false;
         }
         
         public int GetWaitingCharacterCount()
@@ -135,8 +129,6 @@ namespace Sdurlanik.BusJam.MVC.Controllers
             }
             
             _reservedSlots.Clear();
-
-            Debug.Log("WaitingAreaController has been reset.");
         }
         
         public IReadOnlyList<CharacterView> GetWaitingCharacters()
