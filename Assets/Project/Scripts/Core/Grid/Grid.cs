@@ -25,11 +25,16 @@ namespace Sdurlanik.BusJam.Core.Grid
             }
         }
         
+        public int Width => _width;
+        public int Height => _height;
+        
         private readonly int _width;
         private readonly int _height;
         private readonly Vector3 _origin;
         private readonly GameObject[,] _gridObjects;
         private readonly DiContainer _container;
+        
+        private readonly List<GameObject> _instantiatedTiles;
         
         public Grid(int width, int height, Vector3 origin, GameObject tilePrefab, DiContainer container)
         {
@@ -37,9 +42,10 @@ namespace Sdurlanik.BusJam.Core.Grid
             _height = height;
             _origin = origin;
             _gridObjects = new GameObject[width, height];
-            _container = container; // Container'ı sakla
+            _container = container;
 
-            // Grid zeminini oluştur
+            _instantiatedTiles = new List<GameObject>();
+            
             for (int x = 0; x < width; x++)
             {
                 for (int y = 0; y < height; y++)
@@ -47,8 +53,8 @@ namespace Sdurlanik.BusJam.Core.Grid
                     if (tilePrefab != null)
                     {
                         var worldPos = GetWorldPosition(new Vector2Int(x, y));
-                        // Artık container'ı doğrudan kullanabiliriz.
-                        _container.InstantiatePrefab(tilePrefab, worldPos, Quaternion.identity, null);
+                        var tileInstance = _container.InstantiatePrefab(tilePrefab, worldPos, Quaternion.identity, null);
+                        _instantiatedTiles.Add(tileInstance);
                     }
                 }
             }
@@ -97,7 +103,6 @@ namespace Sdurlanik.BusJam.Core.Grid
             var openList = new List<PathNode>();
             var closedList = new HashSet<Vector2Int>();
             
-            // Düğümleri pozisyonlarına göre hızlıca bulmak için bir dictionary.
             var pathNodeMap = new Dictionary<Vector2Int, PathNode>();
 
             var startNode = new PathNode(startPosition)
@@ -231,11 +236,17 @@ namespace Sdurlanik.BusJam.Core.Grid
                 {
                     if (_gridObjects[x, y] != null)
                     {
-                        GameObject.Destroy(_gridObjects[x, y]);
+                        Object.Destroy(_gridObjects[x, y]);
                         _gridObjects[x, y] = null;
                     }
                 }
             }
+            
+            foreach (var tile in _instantiatedTiles)
+            {
+                Object.Destroy(tile);
+            }
+            _instantiatedTiles.Clear();
         }
     }
 }

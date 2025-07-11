@@ -33,8 +33,7 @@ namespace Sdurlanik.BusJam.UI.Views
 
         private void OnLevelReady(LevelReadySignal signal)
         {
-            // TODO: we need to get the level number from the signal or game state.
-            _levelText.text = "LEVEL 1"; 
+            _levelText.text = $"LEVEL {signal.LevelData.LevelNumber}";
         }
 
         private void OnTimerUpdated(TimerUpdatedSignal signal)

@@ -4,6 +4,7 @@ using DG.Tweening;
 using Sdurlanik.BusJam.Core.Events;
 using Sdurlanik.BusJam.Core.Movement;
 using Sdurlanik.BusJam.Models;
+using Sdurlanik.BusJam.Project.Scripts.MVC.Models;
 using UnityEngine;
 using Zenject;
 
@@ -14,9 +15,9 @@ namespace Sdurlanik.BusJam.MVC.Views
     {
         public bool IsMoving { get; set; }
 
-        [Header("References")] [SerializeField]
-        private MeshRenderer _meshRenderer;
-
+        [Header("References")] 
+        [SerializeField] private MeshRenderer _meshRenderer;
+        [SerializeField] private CharacterSettingsSO _characterSettings;
         private SignalBus _signalBus;
         private IMovementTracker _movementTracker;
 
@@ -82,10 +83,11 @@ namespace Sdurlanik.BusJam.MVC.Views
                 {
                     var gridPos = path[i];
                     var worldPosition = new Vector3(gridPos.x, transform.position.y, gridPos.y);
-                    sequence.Append(transform.DOMove(worldPosition, 0.2f).SetEase(Ease.Linear));
+                    sequence.Append(transform.DOMove(worldPosition, _characterSettings.MoveDuration / path.Count).SetEase(Ease.Linear));
                 }
 
                 await sequence.Play().ToUniTask();
+                Debug.Log("Path completed");
             }
             finally
             {
@@ -103,7 +105,11 @@ namespace Sdurlanik.BusJam.MVC.Views
             _movementTracker.RegisterMovement();
             try
             {
-                await transform.DOMove(worldPosition, 0.3f).SetEase(Ease.OutQuad).ToUniTask();
+                await transform.DOMove(worldPosition, _characterSettings.MoveDuration)
+                    .SetEase(Ease.OutQuad)
+                    .ToUniTask();
+                
+                Debug.Log("Point Reached");
             }
             finally
             {

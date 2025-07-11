@@ -56,14 +56,14 @@ namespace Sdurlanik.BusJam.Core.BusSystem
         {
             if (_busQueue.Count > 0)
             {
+                Debug.Log($"Spawning next bus with color: {_busQueue.Peek()} at position: {_busStopPosition}");
                 var nextColor = _busQueue.Dequeue();
                 CurrentBus = await _busFactory.Create(nextColor, _busStopPosition);
                 _signalBus.Fire(new BusArrivedSignal(CurrentBus));
+                return;
             }
-            else
-            {
-                _signalBus.Fire<AllBusesDispatchedSignal>();
-            }
+            
+            _signalBus.Fire<AllBusesDispatchedSignal>();
         }
         
         private async void OnBusFull(BusFullSignal signal)
@@ -71,8 +71,8 @@ namespace Sdurlanik.BusJam.Core.BusSystem
             if (_isBusDeparting || signal.FullBus != CurrentBus) return;
             
             _isBusDeparting = true;
-    
-            await UniTask.Delay(TimeSpan.FromSeconds(1));
+
+            await UniTask.WaitForSeconds(.5f);
             await CurrentBus.View.AnimateDeparture();
             CurrentBus = null;
 

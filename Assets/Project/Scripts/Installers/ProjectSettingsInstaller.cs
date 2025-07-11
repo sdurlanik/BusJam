@@ -14,9 +14,9 @@ namespace Sdurlanik.BusJam.Installers
         {
             SignalBusInstaller.Install(Container);
             Container.DeclareSignal<LevelLoadRequestedSignal>();
+            Container.DeclareSignal<LevelCompletedSignal>();
             Container.DeclareSignal<LevelReadySignal>();
             Container.DeclareSignal<TimerUpdatedSignal>();
-            Container.DeclareSignal<LevelSuccessSignal>();
             Container.DeclareSignal<CharacterClickedSignal>();
             Container.DeclareSignal<BusArrivedSignal>();
             Container.DeclareSignal<BusFullSignal>();

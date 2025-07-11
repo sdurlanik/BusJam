@@ -76,8 +76,10 @@ namespace Sdurlanik.BusJam.Core
         
         private void OnAllBusesDispatched()
         {
+            Debug.Log( "All buses have been dispatched. Checking game state...");
             if (_isLevelWon)
             {
+                Debug.Log("Level already won, skipping checks.");
                 _signalBus.Fire<LevelCompleteSequenceFinishedSignal>();
                 return;
             }
@@ -87,6 +89,7 @@ namespace Sdurlanik.BusJam.Core
         
         private void CheckWinCondition()
         {
+            Debug.Log( "Checking win condition...");
             if (!_gameplayStateHolder.IsGameplayActive) return;
 
             var mainGridCount = _gridSystemManager.MainGrid.GetOccupiedCellCount();
@@ -101,6 +104,7 @@ namespace Sdurlanik.BusJam.Core
         
         private void CheckForStuckCharacters()
         {
+            Debug.Log("Checking for stuck characters...");
             if (!_gameplayStateHolder.IsGameplayActive) return;
 
             var mainGridCount = _gridSystemManager.MainGrid.GetOccupiedCellCount();
@@ -138,6 +142,7 @@ namespace Sdurlanik.BusJam.Core
             _timerController.Stop();
             
             _signalBus.Fire<GameOverSignal>();
+            Debug.Log("Game Over!");
         }
         
         private void ProcessWinState()
@@ -147,8 +152,7 @@ namespace Sdurlanik.BusJam.Core
             _gameplayStateHolder.Pause();
             _timerController.Stop();
             _isLevelWon = true;
-
-            _signalBus.Fire<LevelSuccessSignal>();
+            Debug.Log("Level Won!");
         }
         
         private void OnNewLevelSequenceRequested()

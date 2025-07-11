@@ -29,9 +29,12 @@ namespace Sdurlanik.BusJam.Models
     [CreateAssetMenu(fileName = "so_level_", menuName = "Bus Jam/Create Level SO", order = 0)]
     public class LevelSO : ScriptableObject
     {
+        [Header("Level Info")]
+        public int LevelNumber = 1;
+        
         [Header("Grid Settings")]
-        public int GridWidth;
-        public int GridHeight;
+        public Vector2Int MainGridSize = new Vector2Int(5, 5);
+        public Vector2Int WaitingGridSize = new Vector2Int(5, 1);
 
         [Header("Character Placements")]
         public List<CharacterPlacementData> Characters;

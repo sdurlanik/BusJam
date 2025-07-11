@@ -60,6 +60,7 @@ namespace Sdurlanik.BusJam.MVC.Controllers
             {
                 if (!_gameplayStateHolder.IsGameplayActive) return;
                 _signalBus.Fire(new BusFullSignal(this));
+                Debug.Log("Bus full signal fired");
             }
         }
         

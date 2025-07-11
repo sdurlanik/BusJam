@@ -7,14 +7,14 @@ namespace Sdurlanik.BusJam.Core.Grid
 
     public class GridConfiguration : ScriptableObject
     {
-        [Header("Main Grid Settings")] public int MainGridWidth = 5;
-        public int MainGridHeight = 5;
+        [Header("Tile Prefabs")] 
         public GameObject MainGridTilePrefab;
-
-        [Header("Waiting Area Settings")] public int WaitingGridWidth = 5;
-        public int WaitingGridHeight = 1;
         public GameObject WaitingAreaTilePrefab;
+        
+        [Header("Waiting Area Dimensions")]
+        public Vector2Int WaitingGridSize = new Vector2Int(5, 1);
 
-        [Header("Layout Settings")] public float SpacingBetweenGrids = 2f;
+        [Header("Layout Settings")] 
+        public float SpacingBetweenGrids = 2f;
     }
 }

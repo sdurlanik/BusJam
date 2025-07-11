@@ -16,16 +16,16 @@ namespace Sdurlanik.BusJam.MVC.Controllers
         private readonly IGridSystemManager _gridSystemManager;
         private readonly IBusSystemManager _busSystemManager;
         private readonly SignalBus _signalBus;
+        private readonly HashSet<Vector2Int> _reservedSlots;
         private readonly CharacterView[] _slots;
         
-        private readonly HashSet<Vector2Int> _reservedSlots;
         
         public WaitingAreaController(IGridSystemManager gridSystemManager, GridConfiguration gridConfig, IBusSystemManager busSystemManager, SignalBus signalBus)
         {
             _gridSystemManager = gridSystemManager;
             _busSystemManager = busSystemManager;
             _signalBus = signalBus;
-            _slots = new CharacterView[gridConfig.WaitingGridWidth];
+            _slots = new CharacterView[gridConfig.WaitingGridSize.x];
             _reservedSlots = new HashSet<Vector2Int>();
         }
         
@@ -75,6 +75,7 @@ namespace Sdurlanik.BusJam.MVC.Controllers
             var targetPosition = waitingGrid.GetWorldPosition(reservedSlot, 0.5f);
             
             await character.MoveToPoint(targetPosition);
+            Debug.Log("Character move to point completed");
 
             _reservedSlots.Remove(reservedSlot);
             waitingGrid.PlaceObject(character.gameObject, reservedSlot);
@@ -109,7 +110,7 @@ namespace Sdurlanik.BusJam.MVC.Controllers
                 RemoveCharacterFromArea(character);
         
                 await currentBus.BoardCharacterAsync(character);
-        
+                Debug.Log($"{character.Color.ToString()} board");
                 return true;
             }
 

@@ -157,6 +157,8 @@ MonoBehaviour:
   - {fileID: 4315065852910080671}
   - {fileID: 6704666735885387475}
   - {fileID: 4159194138727668572}
+  _busSettings: {fileID: 11400000, guid: 03aad3dfd29522c4e8de8db9643cf207, type: 2}
+  testEase: 25
 --- !u!1 &5153131629163942079
 GameObject:
   m_ObjectHideFlags: 0

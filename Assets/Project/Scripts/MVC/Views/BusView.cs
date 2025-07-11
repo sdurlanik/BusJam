@@ -2,6 +2,7 @@
 using UnityEngine;
 using DG.Tweening;
 using Cysharp.Threading.Tasks;
+using Sdurlanik.BusJam.Project.Scripts.MVC.Models;
 
 namespace Sdurlanik.BusJam.MVC.Views
 {
@@ -10,6 +11,7 @@ namespace Sdurlanik.BusJam.MVC.Views
         [Header("References")]
         [SerializeField] private MeshRenderer _busBodyRenderer;
         [SerializeField] private List<Transform> _passengerSlots;
+        [SerializeField] private BusSettingsSO _busSettings;
 
         public void SetColor(Color color)
         {
@@ -27,13 +29,17 @@ namespace Sdurlanik.BusJam.MVC.Views
 
         public async UniTask AnimateArrival(Vector3 targetPosition)
         {
-            transform.position = targetPosition + Vector3.left * 20f;
-            await transform.DOMove(targetPosition, 1f).SetEase(Ease.OutCubic).ToUniTask();
+            transform.position = targetPosition + Vector3.left * _busSettings.MoveOffset;
+            await transform.DOMove(targetPosition, _busSettings.MoveDuration)
+                .SetEase(Ease.OutCubic)
+                .ToUniTask();
         }
 
         public async UniTask AnimateDeparture()
         {
-            await transform.DOMove(transform.position + Vector3.right * 20f, 1f).SetEase(Ease.InCubic).ToUniTask();
+            await transform.DOMove(transform.position + Vector3.right * _busSettings.MoveOffset, _busSettings.MoveDuration)
+                .SetEase(Ease.InCubic)
+                .ToUniTask();
             Destroy(gameObject);
         }
     }

@@ -31,6 +31,8 @@ namespace Sdurlanik.BusJam.MVC.Controllers
 
         public void LoadLevel(LevelSO levelData)
         {
+            _gridSystemManager.CreateGrids(levelData);
+            
             Debug.Log($"Loading Level: {levelData.name}");
     
             var mainGrid = _gridSystemManager.MainGrid;
