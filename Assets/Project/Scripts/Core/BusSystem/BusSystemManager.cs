@@ -15,6 +15,7 @@ namespace Sdurlanik.BusJam.Core.BusSystem
     public class BusSystemManager : IBusSystemManager, IInitializable, IDisposable
     {
         public IBusController CurrentBus { get; private set; }
+        private IBusController _nextBusInQueue;
         private readonly IGameplayStateHolder _gameplayStateHolder;
         
         private readonly SignalBus _signalBus;
@@ -22,6 +23,7 @@ namespace Sdurlanik.BusJam.Core.BusSystem
         
         private Queue<CharacterColor> _busQueue;
         private Vector3 _busStopPosition;
+        private Vector3 _nextBusPosition;
         private bool _isBusDeparting = false;
 
         public BusSystemManager(SignalBus signalBus, IBusFactory busFactory, IGameplayStateHolder gameplayStateHolder)
@@ -49,36 +51,35 @@ namespace Sdurlanik.BusJam.Core.BusSystem
         {
             _busQueue = new Queue<CharacterColor>(signal.LevelData.BusColorSequence);
             _busStopPosition = signal.LevelData.BusStopPosition;
-            SpawnNextBus();
-        }
-
-        private async void SpawnNextBus()
-        {
-            if (_busQueue.Count > 0)
-            {
-                Debug.Log($"Spawning next bus with color: {_busQueue.Peek()} at position: {_busStopPosition}");
-                var nextColor = _busQueue.Dequeue();
-                CurrentBus = await _busFactory.Create(nextColor, _busStopPosition);
-                _signalBus.Fire(new BusArrivedSignal(CurrentBus));
-                return;
-            }
-            
-            _signalBus.Fire<AllBusesDispatchedSignal>();
+            _nextBusPosition = _busStopPosition + signal.LevelData.NextBusOffset;
+        
+            SpawnInitialBuses();
         }
         
         private async void OnBusFull(BusFullSignal signal)
         {
-            if (_isBusDeparting || signal.FullBus != CurrentBus) return;
-            
-            _isBusDeparting = true;
-
-            await UniTask.WaitForSeconds(.5f);
+            if (!_gameplayStateHolder.IsGameplayActive || signal.FullBus != CurrentBus) return;
+        
             await CurrentBus.View.AnimateDeparture();
-            CurrentBus = null;
+        
+            CurrentBus = _nextBusInQueue;
+            _nextBusInQueue = null;
 
-            _isBusDeparting = false; 
-
-            SpawnNextBus();
+            if (_busQueue.Count > 0)
+            {
+                var nextColor = _busQueue.Dequeue();
+                _nextBusInQueue = _busFactory.CreateAtPosition(nextColor, _nextBusPosition);
+            }
+        
+            if (CurrentBus != null)
+            {
+                await CurrentBus.View.AnimateToStopPosition(_busStopPosition);
+                _signalBus.Fire(new BusArrivedSignal(CurrentBus));
+            }
+            else
+            {
+                _signalBus.Fire<AllBusesDispatchedSignal>();
+            }
         }
         
         public void Reset()
@@ -87,8 +88,29 @@ namespace Sdurlanik.BusJam.Core.BusSystem
             {
                 Object.Destroy(CurrentBus.View.gameObject);
             }
+            if (_nextBusInQueue != null && _nextBusInQueue.View != null)
+            {
+                Object.Destroy(_nextBusInQueue.View.gameObject);
+            }
             CurrentBus = null;
+            _nextBusInQueue = null;
             _busQueue?.Clear();
+        }
+        
+        private async void SpawnInitialBuses()
+        {
+            if (_busQueue.Count > 0)
+            {
+                var color = _busQueue.Dequeue();
+                CurrentBus = await _busFactory.Create(color, _busStopPosition);
+                _signalBus.Fire(new BusArrivedSignal(CurrentBus));
+            }
+
+            if (_busQueue.Count > 0)
+            {
+                var color = _busQueue.Dequeue();
+                _nextBusInQueue = _busFactory.CreateAtPosition(color, _nextBusPosition);
+            }
         }
     }
 }

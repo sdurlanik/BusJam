@@ -7,5 +7,6 @@ namespace Sdurlanik.BusJam.Project.Scripts.MVC.Models
     {
         public float MoveDuration = 0.3f;
         public float MoveOffset = 20f;
+        public int Capacity = 3;
     }
 }

@@ -22,12 +22,12 @@ namespace Sdurlanik.BusJam.MVC.Controllers
             View = view;
             _signalBus = signalBus;
             _gameplayStateHolder = gameplayStateHolder;
+            
+            View.SetColor(ColorMapper.GetColorFromEnum(_model.BusColor));
         }
         
         public async UniTask Initialize(Vector3 arrivalPosition)
         {
-            View.SetColor(GetColorFromEnum(_model.BusColor));
-            
             await View.AnimateArrival(arrivalPosition);
         }
         

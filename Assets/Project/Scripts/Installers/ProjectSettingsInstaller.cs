@@ -1,5 +1,6 @@
 ﻿using Sdurlanik.BusJam.Core.Events;
 using Sdurlanik.BusJam.Core.Grid;
+using Sdurlanik.BusJam.Project.Scripts.MVC.Models;
 using UnityEngine;
 using Zenject;
 
@@ -9,6 +10,7 @@ namespace Sdurlanik.BusJam.Installers
     {
         [SerializeField] private GridConfiguration _gridConfiguration;
         [SerializeField] private LevelProgressionSO _levelProgression;
+        [SerializeField] private BusSettingsSO _busSettings;
         
         public override void InstallBindings()
         {
@@ -32,6 +34,7 @@ namespace Sdurlanik.BusJam.Installers
             
             Container.Bind<GridConfiguration>().FromInstance(_gridConfiguration).AsSingle();
             Container.Bind<LevelProgressionSO>().FromInstance(_levelProgression).AsSingle();
+            Container.Bind<BusSettingsSO>().FromInstance(_busSettings).AsSingle();
         }
     }
 }

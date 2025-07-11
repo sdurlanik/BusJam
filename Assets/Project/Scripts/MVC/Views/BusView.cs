@@ -42,5 +42,10 @@ namespace Sdurlanik.BusJam.MVC.Views
                 .ToUniTask();
             Destroy(gameObject);
         }
+        
+        public async UniTask AnimateToStopPosition(Vector3 targetPosition)
+        {
+            await transform.DOMove(targetPosition, 0.8f).SetEase(Ease.OutBack).ToUniTask();
+        }
     }
 }

@@ -34,7 +34,6 @@ namespace Sdurlanik.BusJam.Models
         
         [Header("Grid Settings")]
         public Vector2Int MainGridSize = new Vector2Int(5, 5);
-        public Vector2Int WaitingGridSize = new Vector2Int(5, 1);
 
         [Header("Character Placements")]
         public List<CharacterPlacementData> Characters;
@@ -45,6 +44,7 @@ namespace Sdurlanik.BusJam.Models
         [Header("Bus Settings")]
         public List<CharacterColor> BusColorSequence;
         public Vector3 BusStopPosition = new Vector3(2f, 0.5f, 8f);
+        public Vector3 NextBusOffset = new Vector3(-4f, 0f, 0f);
         
         [Header("Level Constraints")]
         public float TimeLimitInSeconds = 120f;

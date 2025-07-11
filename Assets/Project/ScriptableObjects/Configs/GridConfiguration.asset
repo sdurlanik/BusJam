@@ -12,12 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a9f8c696647442893daa4433d44a642, type: 3}
   m_Name: GridConfiguration
   m_EditorClassIdentifier: 
-  MainGridWidth: 5
-  MainGridHeight: 5
   MainGridTilePrefab: {fileID: 995471777950965797, guid: 0fc3a416f0bf5444193073eedcd02455,
     type: 3}
-  WaitingGridWidth: 5
-  WaitingGridHeight: 1
   WaitingAreaTilePrefab: {fileID: 995471777950965797, guid: 0fc3a416f0bf5444193073eedcd02455,
     type: 3}
-  SpacingBetweenGrids: 2
+  WaitingGridSize: {x: 5, y: 1}
+  SpacingBetweenGrids: 1
