@@ -152,6 +152,7 @@ namespace Sdurlanik.BusJam.Core
             _gameplayStateHolder.Pause();
             _timerController.Stop();
             _isLevelWon = true;
+            _signalBus.Fire<LevelCompletedSignal>();
             Debug.Log("Level Won!");
         }
         

@@ -30,6 +30,7 @@ namespace Sdurlanik.BusJam.Core
             _signalBus.Subscribe<StartGameRequestedSignal>(OnStartGameRequested);
             _signalBus.Subscribe<NextLevelRequestedSignal>(OnNextLevelRequested);
             _signalBus.Subscribe<RestartLevelRequestedSignal>(OnRestartLevelRequested);
+            _signalBus.Subscribe<LevelCompletedSignal>(SaveProgress);
         }
 
         public void Dispose()
@@ -37,6 +38,7 @@ namespace Sdurlanik.BusJam.Core
             _signalBus.TryUnsubscribe<StartGameRequestedSignal>(OnStartGameRequested);
             _signalBus.TryUnsubscribe<NextLevelRequestedSignal>(OnNextLevelRequested);
             _signalBus.TryUnsubscribe<RestartLevelRequestedSignal>(OnRestartLevelRequested);
+            _signalBus.TryUnsubscribe<LevelCompletedSignal>(SaveProgress);
         }
         
         private  void OnStartGameRequested()
@@ -52,16 +54,6 @@ namespace Sdurlanik.BusJam.Core
         private async  void OnNextLevelRequested()
         {
             await _movementTracker.WaitForAllMovementsToComplete();
-            
-            _currentLevelIndex++;
-            if (_currentLevelIndex >= _levelProgression.Levels.Count)
-            {
-                _currentLevelIndex = 0;
-            }
-            
-            PlayerPrefs.SetInt(SAVE_KEY, _currentLevelIndex);
-            PlayerPrefs.Save();
-            
             LoadLevelByIndex(_currentLevelIndex);
         }
 
@@ -78,6 +70,19 @@ namespace Sdurlanik.BusJam.Core
             {
                 Debug.LogError($"Level index {index} is out of bounds!");
             }
+        }
+        
+        private void SaveProgress()
+        {
+            int nextLevelIndex = _currentLevelIndex + 1;
+            if (nextLevelIndex >= _levelProgression.Levels.Count)
+            {
+                nextLevelIndex = 0;
+            }
+        
+            PlayerPrefs.SetInt(SAVE_KEY, nextLevelIndex);
+            PlayerPrefs.Save();
+            Debug.Log($"Progress Saved. Next level index is {nextLevelIndex}");
         }
     }
 }

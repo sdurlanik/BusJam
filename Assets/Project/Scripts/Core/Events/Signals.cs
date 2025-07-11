@@ -11,7 +11,8 @@ namespace Sdurlanik.BusJam.Core.Events
         public readonly LevelSO LevelData;
         public LevelReadySignal(LevelSO levelData) => LevelData = levelData;
     }
-    public struct LevelSuccessSignal { }
+    
+    public struct LevelCompletedSignal { }
     public struct GameOverSignal { }
     
     public class LevelLoadRequestedSignal
