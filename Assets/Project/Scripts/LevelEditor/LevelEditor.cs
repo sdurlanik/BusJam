@@ -92,7 +92,14 @@ namespace Sdurlanik.BusJam.LevelEditor
                 return;
             }
 
-            var currentBusColor = LevelToEdit.BusColorSequence[0];
+            var busColorSequence = LevelToEdit.BusColorSequence;
+            if (busColorSequence == null)
+            {
+                Debug.LogWarning("Bus color sequence is null or empty. Cannot place buses.");
+                return;
+            }
+            
+            var currentBusColor = busColorSequence[0];
             var currentBusInstance = Instantiate(PrefabConfig.BusPrefab, LevelToEdit.BusStopPosition, Quaternion.identity, LevelHolder);
             SetBusColor(currentBusInstance, currentBusColor);
             _spawnedObjects.Add(currentBusInstance);

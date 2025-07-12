@@ -96,7 +96,7 @@ namespace Sdurlanik.BusJam.LevelEditor
             EditorGUILayout.BeginVertical("box");
             EditorGUILayout.HelpBox("Edit level number, time limit and grid dimensions.", MessageType.None);
 
-            EditorGUILayout.PropertyField(levelSO.FindProperty("LevelNumber"));
+            EditorGUILayout.PropertyField(levelSO.FindProperty("LevelIndex"));
             EditorGUILayout.PropertyField(levelSO.FindProperty("TimeLimitInSeconds"));
 
             var gridSizeProp = levelSO.FindProperty("MainGridSize");
@@ -155,7 +155,7 @@ namespace Sdurlanik.BusJam.LevelEditor
         private void DrawActionButtons(LevelEditor editor)
         {
             EditorGUILayout.Space(20);
-            EditorGUILayout.HelpBox("Saving will rename the asset based on LevelNumber.", MessageType.Info);
+            EditorGUILayout.HelpBox("Saving will rename the asset based on LevelIndex.", MessageType.Info);
 
             GUI.backgroundColor = new Color(0.6f, 1f, 0.6f);
             if (GUILayout.Button("Save Changes & Rename Asset", GUILayout.Height(40)))
@@ -214,7 +214,7 @@ namespace Sdurlanik.BusJam.LevelEditor
         private void SaveLevelAsset(LevelSO level)
         {
             string path = AssetDatabase.GetAssetPath(level);
-            string newName = $"so_level_{level.LevelIndex}";
+            string newName = $"so_level_{level.LevelIndex + 1}";
 
             if (Path.GetFileNameWithoutExtension(path) != newName)
                 AssetDatabase.RenameAsset(path, newName);
