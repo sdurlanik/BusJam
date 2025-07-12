@@ -18,17 +18,17 @@ namespace Sdurlanik.BusJam.Core.BusSystem
     {
         public IBusController CurrentBus { get; private set; }
         public bool IsBusInTransition { get; private set; }
+        
         private IBusController _nextBusInQueue;
-        private readonly IGameplayStateHolder _gameplayStateHolder;
         
         private readonly SignalBus _signalBus;
         private readonly IBusFactory _busFactory;
+        private readonly IGameplayStateHolder _gameplayStateHolder;
         private readonly IMovementTracker _movementTracker;
         
         private Queue<CharacterColor> _busQueue;
         private Vector3 _busStopPosition;
         private Vector3 _nextBusPosition;
-        private bool _isBusDeparting = false;
         
         private CancellationTokenSource _cancellationTokenSource;
 
@@ -71,25 +71,46 @@ namespace Sdurlanik.BusJam.Core.BusSystem
         private void OnBusFull(BusFullSignal signal)
         {
             if (!_gameplayStateHolder.IsGameplayActive || signal.FullBus != CurrentBus) return;
-            ProcessBusDepartureAsync(_cancellationTokenSource.Token).Forget();
+            
+            AdvanceBusQueue(_cancellationTokenSource.Token).Forget();
         }
-
-        private async UniTask ProcessBusDepartureAsync(CancellationToken cancellationToken)
+        
+        private async UniTask AdvanceBusQueue(CancellationToken cancellationToken)
         {
             IsBusInTransition = true;
-            var departingBus = CurrentBus;
-            
-            CurrentBus = _nextBusInQueue;
-            _nextBusInQueue = null;
 
+            await HandleBusDeparture(cancellationToken);
+            
+            if (cancellationToken.IsCancellationRequested)
+            {
+                IsBusInTransition = false;
+                return;
+            }
+
+            var newBusArrived = await AnimateNextBusToStop(cancellationToken);
+            IsBusInTransition = false;
+
+            if (newBusArrived)
+            {
+                _signalBus.Fire(new BusArrivedSignal(CurrentBus));
+            }
+            else
+            {
+                _signalBus.Fire<AllBusesDispatchedSignal>();
+            }
+        }
+
+        private async UniTask HandleBusDeparture(CancellationToken cancellationToken)
+        {
+            var departingBus = CurrentBus;
+            if (departingBus == null) return;
+            
+            departingBus.IsAcceptingPassengers = false;
+            
             _movementTracker.RegisterMovement();
             try
             {
                 await departingBus.View.AnimateDeparture(cancellationToken);
-            }
-            catch (OperationCanceledException)
-            {
-                Debug.Log("Bus departure was canceled by Reset.");
             }
             finally
             {
@@ -99,32 +120,30 @@ namespace Sdurlanik.BusJam.Core.BusSystem
                     Object.Destroy(departingBus.View.gameObject);
                 }
             }
-            
-            if (cancellationToken.IsCancellationRequested)
-            {
-                IsBusInTransition = false;
-                return;
-            }
+        }
 
-            if (CurrentBus != null)
+        private async UniTask<bool> AnimateNextBusToStop(CancellationToken cancellationToken)
+        {
+            CurrentBus = _nextBusInQueue;
+            _nextBusInQueue = null;
+
+            if (CurrentBus == null) return false;
+
+            _signalBus.Fire(new BusArrivalSequenceStartedSignal(CurrentBus));
+            await CurrentBus.View.AnimateToStopPosition(_busStopPosition, cancellationToken);
+            CurrentBus.IsAcceptingPassengers = true;
+            
+            SpawnNextBusInQueue();
+            
+            return true;
+        }
+
+        private void SpawnNextBusInQueue()
+        {
+            if (_busQueue.Count > 0)
             {
-                _signalBus.Fire(new BusArrivalSequenceStartedSignal(CurrentBus));
-                await CurrentBus.View.AnimateToStopPosition(_busStopPosition,cancellationToken);
-                CurrentBus.IsAcceptingPassengers = true;
-                IsBusInTransition = false;
-                _signalBus.Fire(new BusArrivedSignal(CurrentBus));
-                
-                if (_busQueue.Count > 0)
-                {
-                    var nextColor = _busQueue.Dequeue();
-                    _nextBusInQueue = _busFactory.CreateAtPosition(nextColor, _nextBusPosition);
-                    _nextBusInQueue.View.AnimateArrival(_nextBusPosition, cancellationToken).Forget();
-                }
-            }
-            else
-            {
-                IsBusInTransition = false;
-                _signalBus.Fire<AllBusesDispatchedSignal>();
+                var nextColor = _busQueue.Dequeue();
+                _nextBusInQueue = _busFactory.CreateAtPosition(nextColor, _nextBusPosition);
             }
         }
         
@@ -132,17 +151,10 @@ namespace Sdurlanik.BusJam.Core.BusSystem
         {
             _cancellationTokenSource?.Cancel();
             _cancellationTokenSource?.Dispose();
-            
             _cancellationTokenSource = new CancellationTokenSource();
 
-            if (CurrentBus != null && CurrentBus.View != null)
-            {
-                Object.Destroy(CurrentBus.View.gameObject);
-            }
-            if (_nextBusInQueue != null && _nextBusInQueue.View != null)
-            {
-                Object.Destroy(_nextBusInQueue.View.gameObject);
-            }
+            if (CurrentBus?.View != null) Object.Destroy(CurrentBus.View.gameObject);
+            if (_nextBusInQueue?.View != null) Object.Destroy(_nextBusInQueue.View.gameObject);
             
             CurrentBus = null;
             _nextBusInQueue = null;
@@ -154,24 +166,14 @@ namespace Sdurlanik.BusJam.Core.BusSystem
             if (_busQueue.Count > 0)
             {
                 var color = _busQueue.Dequeue();
-        
                 CurrentBus = await _busFactory.Create(color, _busStopPosition, cancellationToken);
-        
-                if (CurrentBus != null)
-                {
-                    CurrentBus.IsAcceptingPassengers = true;
-                }
-                
                 if (cancellationToken.IsCancellationRequested) return;
+                
+                CurrentBus.IsAcceptingPassengers = true;
                 _signalBus.Fire(new BusArrivedSignal(CurrentBus));
             }
 
-            if (_busQueue.Count > 0)
-            {
-                var color = _busQueue.Dequeue();
-                _nextBusInQueue = _busFactory.CreateAtPosition(color, _nextBusPosition);
-                _nextBusInQueue.View.AnimateArrival(_nextBusPosition, cancellationToken).Forget();
-            }
+            SpawnNextBusInQueue();
         }
     }
 }

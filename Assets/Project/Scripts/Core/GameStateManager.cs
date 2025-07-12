@@ -1,15 +1,13 @@
-﻿using Sdurlanik.BusJam.Core.Events;
+﻿using System;
+using System.Linq;
+using Sdurlanik.BusJam.Core.BusSystem;
+using Sdurlanik.BusJam.Core.Events;
 using Sdurlanik.BusJam.Core.Grid;
+using Sdurlanik.BusJam.Core.Movement;
+using Sdurlanik.BusJam.Core.State;
 using Sdurlanik.BusJam.MVC.Controllers;
 using UnityEngine;
 using Zenject;
-using Cysharp.Threading.Tasks;
-using System;
-using System.Linq;
-using DG.Tweening;
-using Sdurlanik.BusJam.Core.BusSystem;
-using Sdurlanik.BusJam.Core.Movement;
-using Sdurlanik.BusJam.Core.State;
 
 namespace Sdurlanik.BusJam.Core
 {
@@ -23,8 +21,7 @@ namespace Sdurlanik.BusJam.Core
         private readonly IGameplayStateHolder _gameplayStateHolder;
         private readonly ITimerController _timerController;
         
-        private bool _isLevelWon = false;
-        private bool _isLevelLost = false;
+        private bool _isLevelWon;
         
         public GameStateManager(SignalBus signalBus, IGridSystemManager gridSystemManager, IWaitingAreaController waitingAreaController, IMovementTracker movementTracker, IBusSystemManager busSystemManager, IGameplayStateHolder gameplayStateHolder, ITimerController timerController)
         {
@@ -39,17 +36,12 @@ namespace Sdurlanik.BusJam.Core
 
         public void Initialize()
         {
-            _isLevelWon = false;
-            _isLevelLost = false;
-            _gameplayStateHolder.Resume();
-            
             _signalBus.Subscribe<AllBusesDispatchedSignal>(OnAllBusesDispatched);
             _signalBus.Subscribe<RestartLevelRequestedSignal>(OnNewLevelSequenceRequested);
             _signalBus.Subscribe<NextLevelRequestedSignal>(OnNewLevelSequenceRequested);
             _signalBus.Subscribe<BusArrivedSignal>(OnBusArrived);
             _signalBus.Subscribe<TimeIsUpSignal>(OnTimeIsUp);
             _signalBus.Subscribe<CharacterEnteredWaitingAreaSignal>(OnCharacterEnteredWaitingArea);
-
         }
 
         public void Dispose()
@@ -60,35 +52,23 @@ namespace Sdurlanik.BusJam.Core
             _signalBus.TryUnsubscribe<BusArrivedSignal>(OnBusArrived);
             _signalBus.TryUnsubscribe<TimeIsUpSignal>(OnTimeIsUp);
             _signalBus.TryUnsubscribe<CharacterEnteredWaitingAreaSignal>(OnCharacterEnteredWaitingArea);
-
         }
         
-        private void OnTimeIsUp() => ProcessGameOverState();
-
+        private void OnTimeIsUp() => ProcessGameOverState("Time is up!");
         private void OnCharacterEnteredWaitingArea() => CheckForWaitingAreaDeadlock();
-
         private void OnBusArrived() => CheckForWaitingAreaDeadlock();
 
         private void OnAllBusesDispatched()
         {
-            Debug.Log("All buses have been dispatched. Checking final game state...");
-            if (_isLevelWon)
-            {
-                Debug.Log("Level already won, skipping checks.");
-                _signalBus.Fire<LevelCompleteSequenceFinishedSignal>();
-                return;
-            }
+            if (_isLevelWon) return;
 
             CheckWinCondition();
         }
 
         private void CheckWinCondition()
         {
-            Debug.Log( "Checking win condition...");
-
             var mainGridCount = _gridSystemManager.MainGrid.GetOccupiedCellCount();
             var waitingAreaCount = _waitingAreaController.GetWaitingCharacterCount();
-
             
             if (mainGridCount == 0 && waitingAreaCount == 0)
             {
@@ -102,7 +82,6 @@ namespace Sdurlanik.BusJam.Core
         
         private void CheckForStuckCharacters()
         {
-            Debug.Log("Checking for stuck characters...");
             if (!_gameplayStateHolder.IsGameplayActive) return;
 
             var mainGridCount = _gridSystemManager.MainGrid.GetOccupiedCellCount();
@@ -110,41 +89,37 @@ namespace Sdurlanik.BusJam.Core
 
             if (mainGridCount > 0 || waitingAreaCount > 0)
             {
-                ProcessGameOverState();
+                ProcessGameOverState("Game ended with stuck characters.");
             }
         }
         
         private void CheckForWaitingAreaDeadlock()
         {
-            if (!_gameplayStateHolder.IsGameplayActive) return;
-            if (_busSystemManager.IsBusInTransition)
+            if (!_gameplayStateHolder.IsGameplayActive || _busSystemManager.IsBusInTransition || !_waitingAreaController.IsFull())
             {
-                Debug.Log("Bus is in transition, deadlock check deferred.");
                 return;
             }
-            if (!_waitingAreaController.IsFull()) return;
 
             var currentBus = _busSystemManager.CurrentBus;
             if (currentBus == null)
             {
                 if (_waitingAreaController.GetWaitingCharacterCount() > 0)
                 {
-                    ProcessGameOverState();
+                    ProcessGameOverState("No more buses available, but characters are waiting.");
                 }
                 return;
             }
-
 
             var busColor = currentBus.GetColor();
             bool canAnyoneBoard = _waitingAreaController.GetWaitingCharacters().Any(c => c != null && c.Color == busColor);
 
             if (!canAnyoneBoard)
             {
-                ProcessGameOverState();
+                ProcessGameOverState($"Deadlock: No matching character for the {busColor} bus.");
             }
         }
         
-        private void ProcessGameOverState()
+        private void ProcessGameOverState(string reason)
         {
             if (!_gameplayStateHolder.IsGameplayActive) return;
             
@@ -152,7 +127,7 @@ namespace Sdurlanik.BusJam.Core
             _timerController.Stop();
             
             _signalBus.Fire<GameOverSignal>();
-            Debug.Log("Game Over!");
+            Debug.Log(reason);
         }
         
         private void ProcessWinState()
@@ -163,7 +138,6 @@ namespace Sdurlanik.BusJam.Core
             _timerController.Stop();
             _isLevelWon = true;
             _signalBus.Fire<LevelCompletedSignal>();
-            Debug.Log("Level Won!");
         }
         
         private void OnNewLevelSequenceRequested()
@@ -171,7 +145,6 @@ namespace Sdurlanik.BusJam.Core
             _gameplayStateHolder.Resume();
             _movementTracker.Reset();
             _isLevelWon = false;
-            _isLevelLost = false;
         }
     }
 }

@@ -5,18 +5,16 @@ namespace Sdurlanik.BusJam.UI.States
 {
     public class UIEndGameState : IUIState
     {
-        private readonly GameObject _panel;
         private readonly EndScreenView _view;
 
-        public UIEndGameState(GameObject panel)
+        public UIEndGameState(EndScreenView view)
         {
-            _panel = panel;
-            _view = panel.GetComponent<EndScreenView>();
+            _view = view;
         }
 
         public void Enter(object payload = null)
         {
-            _panel.SetActive(true);
+            _view.gameObject.SetActive(true);
             
             if (payload is bool didWin)
             {
@@ -26,7 +24,7 @@ namespace Sdurlanik.BusJam.UI.States
 
         public void Exit()
         {
-            _panel.SetActive(false);
+            _view.gameObject.SetActive(false);
         }
     }
 }

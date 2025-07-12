@@ -14,7 +14,6 @@ namespace Sdurlanik.BusJam.MVC.Controllers
         UniTask BoardCharacterAsync(CharacterView character);
         UniTask  Initialize(Vector3 arrivalPosition, CancellationToken cancellationToken);
         bool HasSpace();
-        IEnumerable<UniTask> GetPendingBoardingTasks();
         CharacterColor GetColor();
         bool IsAcceptingPassengers { get; set; }
     }

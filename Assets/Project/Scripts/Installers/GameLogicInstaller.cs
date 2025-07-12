@@ -9,11 +9,10 @@ using Zenject;
 
 namespace Sdurlanik.BusJam.Installers
 {
-    public class GameLogicInstaller :MonoInstaller
+    public class GameLogicInstaller : MonoInstaller
     {
         public override void InstallBindings()
         {
-            Container.Bind<CharacterMovementController>().AsSingle().NonLazy();
             Container.Bind<ILevelController>().To<LevelController>().AsSingle().NonLazy();
             Container.Bind<IPathfindingService>().To<PathfindingService>().AsSingle();
             Container.BindInterfacesAndSelfTo<GridSystemManager>().AsSingle().NonLazy();
@@ -21,6 +20,7 @@ namespace Sdurlanik.BusJam.Installers
             Container.BindInterfacesAndSelfTo<WaitingAreaController>().AsSingle().NonLazy();
             Container.BindInterfacesAndSelfTo<GameStateManager>().AsSingle().NonLazy();
             Container.BindInterfacesAndSelfTo<LevelProgressionManager>().AsSingle().NonLazy();
+            Container.BindInterfacesAndSelfTo<CharacterMovementController>().AsSingle().NonLazy();
             Container.BindInterfacesAndSelfTo<TimerController>().AsSingle();
             Container.BindInterfacesAndSelfTo<MovementTracker>().AsSingle();
             Container.BindInterfacesAndSelfTo<GameplayStateHolder>().AsSingle();

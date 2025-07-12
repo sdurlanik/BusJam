@@ -13,8 +13,6 @@ namespace Sdurlanik.BusJam.Core.Grid
         private readonly int _height;
         private readonly Vector3 _origin;
         private readonly GameObject[,] _gridObjects;
-        private readonly DiContainer _container;
-
         private readonly List<GameObject> _instantiatedTiles;
 
         public Grid(int width, int height, Vector3 origin, GameObject tilePrefab, DiContainer container)
@@ -23,21 +21,17 @@ namespace Sdurlanik.BusJam.Core.Grid
             _height = height;
             _origin = origin;
             _gridObjects = new GameObject[width, height];
-            _container = container;
-
             _instantiatedTiles = new List<GameObject>();
 
             for (int x = 0; x < width; x++)
             {
                 for (int y = 0; y < height; y++)
                 {
-                    if (tilePrefab != null)
-                    {
-                        var worldPos = GetWorldPosition(new Vector2Int(x, y));
-                        var tileInstance =
-                            _container.InstantiatePrefab(tilePrefab, worldPos, Quaternion.identity, null);
-                        _instantiatedTiles.Add(tileInstance);
-                    }
+                    if (tilePrefab == null) continue;
+                    
+                    var worldPos = GetWorldPosition(new Vector2Int(x, y));
+                    var tileInstance = container.InstantiatePrefab(tilePrefab, worldPos, Quaternion.identity, null);
+                    _instantiatedTiles.Add(tileInstance);
                 }
             }
         }
@@ -49,50 +43,34 @@ namespace Sdurlanik.BusJam.Core.Grid
 
         public GameObject GetObjectAt(Vector2Int gridPosition)
         {
-            if (IsPositionValid(gridPosition))
-            {
-                return _gridObjects[gridPosition.x, gridPosition.y];
-            }
-
-            return null;
+            return IsWithinBounds(gridPosition) ? _gridObjects[gridPosition.x, gridPosition.y] : null;
         }
 
         public void PlaceObject(GameObject obj, Vector2Int gridPosition)
         {
-            if (IsPositionValid(gridPosition))
+            if (IsWithinBounds(gridPosition))
             {
                 _gridObjects[gridPosition.x, gridPosition.y] = obj;
-            }
-            else
-            {
-                Debug.LogError($"[GridManager] Invalid position to place object: {gridPosition}");
             }
         }
 
         public bool IsCellAvailable(Vector2Int gridPosition)
         {
-            return IsPositionValid(gridPosition) && _gridObjects[gridPosition.x, gridPosition.y] == null;
+            return IsWithinBounds(gridPosition) && _gridObjects[gridPosition.x, gridPosition.y] == null;
         }
 
         public void ClearCell(Vector2Int gridPosition)
         {
-            if (IsPositionValid(gridPosition))
+            if (IsWithinBounds(gridPosition))
             {
                 _gridObjects[gridPosition.x, gridPosition.y] = null;
             }
         }
 
-        private bool IsPositionValid(Vector2Int gridPosition)
+        private bool IsWithinBounds(Vector2Int gridPosition)
         {
-            var result = gridPosition.x >= 0 && gridPosition.x < _width &&
-                         gridPosition.y >= 0 && gridPosition.y < _height;
-
-            if (!result)
-            {
-                Debug.LogWarning($"[GridManager] Position {gridPosition} is invalid. Width: {_width}, Height: {_height}");
-            }
-            
-            return result;
+            return gridPosition.x >= 0 && gridPosition.x < _width &&
+                   gridPosition.y >= 0 && gridPosition.y < _height;
         }
 
         public int GetOccupiedCellCount()
@@ -108,7 +86,6 @@ namespace Sdurlanik.BusJam.Core.Grid
                     }
                 }
             }
-
             return count;
         }
 
@@ -130,7 +107,6 @@ namespace Sdurlanik.BusJam.Core.Grid
             {
                 Object.Destroy(tile);
             }
-
             _instantiatedTiles.Clear();
         }
     }

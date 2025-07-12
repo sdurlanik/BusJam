@@ -14,8 +14,8 @@ namespace Sdurlanik.BusJam.Core
         private float _remainingTime;
         private bool _isTimerRunning;
         
-        private float _updateTimer;
-        private const float UPDATE_INTERVAL = 1f;
+        private float _visualUpdateTimer;
+        private const float VISUAL_UPDATE_INTERVAL = 1f;
 
         public TimerController(SignalBus signalBus, IGameplayStateHolder gameplayStateHolder)
         {
@@ -39,7 +39,8 @@ namespace Sdurlanik.BusJam.Core
         {
             _remainingTime = signal.LevelData.TimeLimitInSeconds;
             _isTimerRunning = true;
-            _updateTimer = UPDATE_INTERVAL;
+            _visualUpdateTimer = 0f;
+            _signalBus.Fire(new TimerUpdatedSignal(_remainingTime));
         }
 
         public void Stop()
@@ -51,24 +52,21 @@ namespace Sdurlanik.BusJam.Core
         {
             if (!_isTimerRunning || !_gameplayStateHolder.IsGameplayActive) return;
 
-            if (_remainingTime > 0)
+            _remainingTime -= Time.deltaTime;
+            _visualUpdateTimer -= Time.deltaTime;
+
+            if (_visualUpdateTimer <= 0f)
             {
-                _remainingTime -= Time.deltaTime;
-                _updateTimer += Time.deltaTime;
-
-                if (_updateTimer >= UPDATE_INTERVAL)
-                {
-                    _updateTimer -= UPDATE_INTERVAL;
-                    _signalBus.Fire(new TimerUpdatedSignal(_remainingTime));
-                }
+                _visualUpdateTimer = VISUAL_UPDATE_INTERVAL;
+                _signalBus.Fire(new TimerUpdatedSignal(_remainingTime));
             }
-
-            if (!(_remainingTime <= 0)) return;
-            if (!_isTimerRunning) return;
-                
-            Stop();
-
-            _signalBus.Fire<TimeIsUpSignal>(); 
+            
+            if (_remainingTime <= 0)
+            {
+                _remainingTime = 0;
+                Stop();
+                _signalBus.Fire<TimeIsUpSignal>();
+            }
         }
     }
 }

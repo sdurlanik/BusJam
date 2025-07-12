@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using Cysharp.Threading.Tasks;
 using Sdurlanik.BusJam.Core.Grid;
 using Sdurlanik.BusJam.Core.Events;
-using Sdurlanik.BusJam.Core.Movement;
 using Sdurlanik.BusJam.Core.Pathfinding;
 using Sdurlanik.BusJam.Core.State;
 using Sdurlanik.BusJam.MVC.Views;
@@ -11,7 +12,7 @@ using Zenject;
 
 namespace Sdurlanik.BusJam.MVC.Controllers
 {
-    public class CharacterMovementController
+    public class CharacterMovementController : IInitializable, IDisposable
     {
         private readonly SignalBus _signalBus;
         private readonly IGridSystemManager _gridSystemManager;
@@ -28,58 +29,37 @@ namespace Sdurlanik.BusJam.MVC.Controllers
             _waitingAreaController = waitingAreaController;
             _gameplayStateHolder = gameplayStateHolder;
             _pathfindingService = pathfindingService;
+        }
+        
+        public void Initialize() => _signalBus.Subscribe<CharacterClickedSignal>(OnCharacterClicked);
+        public void Dispose() => _signalBus.TryUnsubscribe<CharacterClickedSignal>(OnCharacterClicked);
 
-            _signalBus.Subscribe<CharacterClickedSignal>(OnCharacterClicked);
+        private void OnCharacterClicked(CharacterClickedSignal signal)
+        {
+            if (!_gameplayStateHolder.IsGameplayActive) return;
+
+            HandleCharacterMovement(signal.ClickedCharacter).Forget();
         }
 
-        private async void OnCharacterClicked(CharacterClickedSignal signal)
+        private async UniTask HandleCharacterMovement(CharacterView character)
         {
-            if (!_gameplayStateHolder.IsGameplayActive)
-            {
-                Debug.LogWarning("Gameplay is not active. Ignoring character click.");
-                return;
-            }
+            if (character.IsMoving) return;
+
+            var path = FindPathToExit(character, _gridSystemManager.MainGrid);
+            if (path == null) return;
             
-            var character = signal.ClickedCharacter;
-
-            if (character.IsMoving)
-            {
-                return;
-            }
-
-            var mainGrid = _gridSystemManager.MainGrid;
-            var path = FindPathToExit(character, mainGrid);
-            if (path == null)
-            {
-                Debug.LogWarning($"No valid path found for character {character.name} to exit.");
-                return;
-            }
-
             var reservedSlot = _waitingAreaController.ReserveNextAvailableSlot();
-            if (reservedSlot == null)
-            {
-                Debug.LogWarning($"No available slot in the waiting area for character {character.name}.");
-                return;
-            }
+            if (reservedSlot == null) return;
 
             character.IsMoving = true;
-            try
-            {
-                var startPos = character.GridPosition;
-
-                mainGrid.ClearCell(startPos);
-
-                await character.MoveAlongPath(path);
-
-                await _waitingAreaController.FinalizeMoveToSlot(character, reservedSlot.Value);
-            }
-            finally
-            {
-                character.IsMoving = false;
-            }
+            
+            _gridSystemManager.MainGrid.ClearCell(character.GridPosition);
+            await character.MoveAlongPath(path);
+            await _waitingAreaController.FinalizeMoveToSlot(character, reservedSlot.Value);
+            
+            character.IsMoving = false;
         }
-
-
+        
         private List<Vector2Int> FindPathToExit(CharacterView character, IGrid grid)
         {
             var exitPoints = GetExitPoints(grid);
@@ -106,8 +86,7 @@ namespace Sdurlanik.BusJam.MVC.Controllers
             for (int x = 0; x < grid.Width; x++)
             {
                 var exitPos = new Vector2Int(x, topRowIndex);
-                
-             if (grid.IsCellAvailable(exitPos))
+                if (grid.IsCellAvailable(exitPos))
                 {
                     exits.Add(exitPos);
                 }

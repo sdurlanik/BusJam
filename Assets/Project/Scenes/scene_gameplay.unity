@@ -1886,7 +1886,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _startScreenPanel: {fileID: 1683796431}
   _gameplayPanel: {fileID: 1515488796}
-  _endScreenPanel: {fileID: 1494539423}
+  _endScreenView: {fileID: 1494539425}
 --- !u!1 &2077837804
 GameObject:
   m_ObjectHideFlags: 0

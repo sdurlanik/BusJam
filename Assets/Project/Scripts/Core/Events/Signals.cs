@@ -13,9 +13,10 @@ namespace Sdurlanik.BusJam.Core.Events
     }
     
     public struct LevelCompletedSignal { }
+    
     public struct GameOverSignal { }
     
-    public class LevelLoadRequestedSignal
+    public struct LevelLoadRequestedSignal
     {
         public readonly LevelSO LevelData;
         public LevelLoadRequestedSignal(LevelSO levelData) => LevelData = levelData;
@@ -56,7 +57,9 @@ namespace Sdurlanik.BusJam.Core.Events
     public struct WaitingAreaChangedSignal { }
     
     public struct LevelCompleteSequenceFinishedSignal { }
+    
     public struct TimeIsUpSignal { }
+    
     public struct BusArrivalSequenceStartedSignal 
     {
         public readonly IBusController ArrivingBus;

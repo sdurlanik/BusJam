@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
+﻿using System.Threading;
 using Cysharp.Threading.Tasks;
 using Sdurlanik.BusJam.Core.Events;
 using Sdurlanik.BusJam.Core.State;
@@ -14,82 +12,68 @@ namespace Sdurlanik.BusJam.MVC.Controllers
 {
     public class BusController : IBusController
     {
-        private readonly SignalBus _signalBus;
         public BusView View { get; }
-        private readonly BusModel _model;
+        public bool IsAcceptingPassengers { get; set; }
+
+        private readonly SignalBus _signalBus;
+        private readonly BusModel _busModel;
         private readonly IGameplayStateHolder _gameplayStateHolder;
-        private readonly List<UniTask> _boardingTasks = new();
-        public bool IsAcceptingPassengers { get; set; } = false;
+
         public BusController(BusModel model, BusView view, SignalBus signalBus, IGameplayStateHolder gameplayStateHolder)
         {
-            _model = model;
+            _busModel = model;
             View = view;
             _signalBus = signalBus;
             _gameplayStateHolder = gameplayStateHolder;
             
-            View.SetColor(ColorMapper.GetColorFromEnum(_model.BusColor));
+            View.SetColor(ColorMapper.GetColorFromEnum(_busModel.BusColor));
         }
         
         public async UniTask Initialize(Vector3 arrivalPosition, CancellationToken cancellationToken)
         {
             await View.AnimateArrival(arrivalPosition, cancellationToken);
         }
-        
+
         public bool HasSpace()
         {
-            return _model.HasSpace();
+            return _busModel.HasSpace();
         }
 
         public CharacterColor GetColor()
         {
-            return _model.BusColor;
+            return _busModel.BusColor;
         }
         
         public bool CanBoard(CharacterView character)
         {
-            return IsAcceptingPassengers && _model.HasSpace() && _model.IsColorMatch(character.Color);
+            return IsAcceptingPassengers && _busModel.HasSpace() && _busModel.IsColorMatch(character.Color);
         }
         
         public async UniTask BoardCharacterAsync(CharacterView character)
         {
-            var slotIndex = _model.Passengers.Count;
+            var slotIndex = _busModel.Passengers.Count;
             var slotTransform = View.GetSlotTransform(slotIndex);
 
-            _model.AddPassenger(character);
-        
-            var boardingTask = BoardingSequence(character, slotTransform);
-            _boardingTasks.Add(boardingTask);
-        
-            await boardingTask;
-
-            _boardingTasks.Remove(boardingTask);
-
-            character.transform.SetParent(slotTransform);
-
-            if (!_model.HasSpace())
-            {
-                if (!_gameplayStateHolder.IsGameplayActive) return;
+            _busModel.AddPassenger(character);
             
-                _signalBus.Fire(new BusFullSignal(this));
-                Debug.Log("Bus full signal fired");
-            }
-        }
-
-        private async UniTask BoardingSequence(CharacterView character, Transform slotTransform)
-        {
             try
             {
                 await character.MoveToPoint(slotTransform.position);
             }
-            catch (OperationCanceledException e)
+            catch (System.OperationCanceledException)
             {
-                Debug.LogWarning($"MoveToPoint canceled: {e.Message}");
+                // do nothing because the game is already over
+            }
+            
+            if (character != null)
+            {
+                character.transform.SetParent(slotTransform);
+            }
+
+            if (!_busModel.HasSpace() && _gameplayStateHolder.IsGameplayActive)
+            {
+                _signalBus.Fire(new BusFullSignal(this));
             }
         }
-        public IEnumerable<UniTask> GetPendingBoardingTasks()
-        {
-            return _boardingTasks;
-        }
-
     }
 }
