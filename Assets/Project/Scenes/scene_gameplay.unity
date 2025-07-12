@@ -1846,6 +1846,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _gridConfiguration: {fileID: 11400000, guid: ff8e65ccd804b1c48b1babadf38131a1, type: 2}
   _levelProgression: {fileID: 11400000, guid: ddd83b6d75d35d148b93d05e955bd61a, type: 2}
+  _busSettings: {fileID: 11400000, guid: 03aad3dfd29522c4e8de8db9643cf207, type: 2}
 --- !u!114 &1951325327
 MonoBehaviour:
   m_ObjectHideFlags: 0

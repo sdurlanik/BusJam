@@ -2,6 +2,7 @@
 using Sdurlanik.BusJam.Core.BusSystem;
 using Sdurlanik.BusJam.Core.Grid;
 using Sdurlanik.BusJam.Core.Movement;
+using Sdurlanik.BusJam.Core.Pathfinding;
 using Sdurlanik.BusJam.Core.State;
 using Sdurlanik.BusJam.MVC.Controllers;
 using Zenject;
@@ -14,6 +15,7 @@ namespace Sdurlanik.BusJam.Installers
         {
             Container.Bind<CharacterMovementController>().AsSingle().NonLazy();
             Container.Bind<ILevelController>().To<LevelController>().AsSingle().NonLazy();
+            Container.Bind<IPathfindingService>().To<PathfindingService>().AsSingle();
             Container.BindInterfacesAndSelfTo<GridSystemManager>().AsSingle().NonLazy();
             Container.BindInterfacesAndSelfTo<BusSystemManager>().AsSingle().NonLazy();
             Container.BindInterfacesAndSelfTo<WaitingAreaController>().AsSingle().NonLazy();

@@ -12,21 +12,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f049b699daaa8a4c87c8ac966c4f1c4, type: 3}
   m_Name: so_level_3
   m_EditorClassIdentifier: 
-  LevelNumber: 3
+  LevelIndex: 2
   MainGridSize: {x: 5, y: 5}
   Characters:
+  - Color: 0
+    GridPosition: {x: 2, y: 3}
+  - Color: 0
+    GridPosition: {x: 2, y: 2}
   - Color: 1
-    GridPosition: {x: 2, y: 0}
+    GridPosition: {x: 3, y: 2}
   - Color: 1
+    GridPosition: {x: 3, y: 1}
+  - Color: 2
+    GridPosition: {x: 0, y: 3}
+  - Color: 2
+    GridPosition: {x: 0, y: 2}
+  - Color: 2
+    GridPosition: {x: 2, y: 1}
+  - Color: 4
+    GridPosition: {x: 0, y: 1}
+  - Color: 4
+    GridPosition: {x: 0, y: 0}
+  - Color: 4
+    GridPosition: {x: 4, y: 0}
+  - Color: 1
+    GridPosition: {x: 1, y: 0}
+  - Color: 0
+    GridPosition: {x: 4, y: 1}
+  - Color: 3
     GridPosition: {x: 4, y: 4}
   - Color: 3
-    GridPosition: {x: 2, y: 4}
+    GridPosition: {x: 4, y: 3}
   - Color: 3
-    GridPosition: {x: 2, y: 2}
-  - Color: 3
-    GridPosition: {x: 2, y: 1}
+    GridPosition: {x: 1, y: 1}
   Obstacles: []
-  BusColorSequence: 010000000200000003000000
-  BusStopPosition: {x: 2, y: 0.5, z: 8}
-  NextBusOffset: {x: -4, y: 0, z: 0}
-  TimeLimitInSeconds: 20
+  BusColorSequence: 0000000003000000020000000400000001000000
+  BusStopPosition: {x: 1.91, y: 0.5, z: 8}
+  NextBusOffset: {x: -4.64, y: 0, z: 0}
+  TimeLimitInSeconds: 30

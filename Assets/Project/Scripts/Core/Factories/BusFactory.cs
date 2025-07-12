@@ -1,4 +1,5 @@
-﻿using Cysharp.Threading.Tasks;
+﻿using System.Threading;
+using Cysharp.Threading.Tasks;
 using Sdurlanik.BusJam.Models;
 using Sdurlanik.BusJam.MVC.Controllers;
 using Sdurlanik.BusJam.MVC.Models;
@@ -22,15 +23,13 @@ namespace Sdurlanik.BusJam.Core.Factories
             _busSettings = busSettings;
         }
 
-        public async UniTask<IBusController> Create(CharacterColor color, Vector3 arrivalPosition)
+        public async UniTask<IBusController> Create(CharacterColor color, Vector3 arrivalPosition, CancellationToken cancellationToken)
         {
             var busView = _container.InstantiatePrefabForComponent<BusView>(_busPrefab);
-
-            var busModel = new BusModel(color, 3); //TODO: capacity should be configurable
-
+            var busModel = new BusModel(color, _busSettings.Capacity); 
             var busController = _container.Instantiate<BusController>(new object[] { busModel, busView });
 
-            await busController.Initialize(arrivalPosition);
+            await busController.Initialize(arrivalPosition, cancellationToken);
 
             return busController;
         }

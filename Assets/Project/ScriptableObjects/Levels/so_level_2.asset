@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f049b699daaa8a4c87c8ac966c4f1c4, type: 3}
   m_Name: so_level_2
   m_EditorClassIdentifier: 
-  GridWidth: 5
-  GridHeight: 5
+  LevelIndex: 1
+  MainGridSize: {x: 5, y: 5}
   Characters:
   - Color: 2
     GridPosition: {x: 0, y: 0}
@@ -36,4 +36,5 @@ MonoBehaviour:
   Obstacles: []
   BusColorSequence: 020000000300000004000000
   BusStopPosition: {x: 2, y: 0.5, z: 8}
-  TimeLimitInSeconds: 15
+  NextBusOffset: {x: -4, y: 0, z: 0}
+  TimeLimitInSeconds: 30

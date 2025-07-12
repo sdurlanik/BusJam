@@ -1,4 +1,7 @@
-﻿using Cysharp.Threading.Tasks;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using Sdurlanik.BusJam.Core.Events;
 using Sdurlanik.BusJam.Core.State;
 using Sdurlanik.BusJam.Models;
@@ -15,7 +18,8 @@ namespace Sdurlanik.BusJam.MVC.Controllers
         public BusView View { get; }
         private readonly BusModel _model;
         private readonly IGameplayStateHolder _gameplayStateHolder;
-
+        private readonly List<UniTask> _boardingTasks = new();
+        public bool IsAcceptingPassengers { get; set; } = false;
         public BusController(BusModel model, BusView view, SignalBus signalBus, IGameplayStateHolder gameplayStateHolder)
         {
             _model = model;
@@ -26,9 +30,9 @@ namespace Sdurlanik.BusJam.MVC.Controllers
             View.SetColor(ColorMapper.GetColorFromEnum(_model.BusColor));
         }
         
-        public async UniTask Initialize(Vector3 arrivalPosition)
+        public async UniTask Initialize(Vector3 arrivalPosition, CancellationToken cancellationToken)
         {
-            await View.AnimateArrival(arrivalPosition);
+            await View.AnimateArrival(arrivalPosition, cancellationToken);
         }
         
         public bool HasSpace()
@@ -43,38 +47,49 @@ namespace Sdurlanik.BusJam.MVC.Controllers
         
         public bool CanBoard(CharacterView character)
         {
-            return _model.HasSpace() && _model.IsColorMatch(character.Color);
+            return IsAcceptingPassengers && _model.HasSpace() && _model.IsColorMatch(character.Color);
         }
         
-        public  async UniTask BoardCharacterAsync(CharacterView character)
+        public async UniTask BoardCharacterAsync(CharacterView character)
         {
             var slotIndex = _model.Passengers.Count;
             var slotTransform = View.GetSlotTransform(slotIndex);
-            
+
             _model.AddPassenger(character);
-            
-            await character.MoveToPoint(slotTransform.position);
+        
+            var boardingTask = BoardingSequence(character, slotTransform);
+            _boardingTasks.Add(boardingTask);
+        
+            await boardingTask;
+
+            _boardingTasks.Remove(boardingTask);
+
             character.transform.SetParent(slotTransform);
-            
+
             if (!_model.HasSpace())
             {
                 if (!_gameplayStateHolder.IsGameplayActive) return;
+            
                 _signalBus.Fire(new BusFullSignal(this));
                 Debug.Log("Bus full signal fired");
             }
         }
-        
-        private Color GetColorFromEnum(CharacterColor color)
+
+        private async UniTask BoardingSequence(CharacterView character, Transform slotTransform)
         {
-            switch (color)
+            try
             {
-                case CharacterColor.Red: return Color.red;
-                case CharacterColor.Green: return Color.green;
-                case CharacterColor.Blue: return Color.blue;
-                case CharacterColor.Yellow: return Color.yellow;
-                case CharacterColor.Purple: return new Color(0.5f, 0, 0.5f);
-                default: return Color.white;
+                await character.MoveToPoint(slotTransform.position);
+            }
+            catch (OperationCanceledException e)
+            {
+                Debug.LogWarning($"MoveToPoint canceled: {e.Message}");
             }
         }
+        public IEnumerable<UniTask> GetPendingBoardingTasks()
+        {
+            return _boardingTasks;
+        }
+
     }
 }

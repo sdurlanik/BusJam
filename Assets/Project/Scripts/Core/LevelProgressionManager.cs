@@ -80,6 +80,8 @@ namespace Sdurlanik.BusJam.Core
                 nextLevelIndex = 0;
             }
         
+            _currentLevelIndex = nextLevelIndex;
+            
             PlayerPrefs.SetInt(SAVE_KEY, nextLevelIndex);
             PlayerPrefs.Save();
             Debug.Log($"Progress Saved. Next level index is {nextLevelIndex}");

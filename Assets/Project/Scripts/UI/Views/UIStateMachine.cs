@@ -23,7 +23,7 @@ namespace Sdurlanik.BusJam.UI
         {
             _signalBus.Subscribe<LevelReadySignal>(OnLevelReady);
             _signalBus.Subscribe<GameOverSignal>(OnGameOver);
-            _signalBus.Subscribe<LevelCompleteSequenceFinishedSignal>(OnLevelCompleteSequenceFinished);
+            _signalBus.Subscribe<LevelCompletedSignal>(OnLevelCompleted);
             ChangeState<UIStartState>();
         }
         
@@ -31,7 +31,7 @@ namespace Sdurlanik.BusJam.UI
         {
             _signalBus.TryUnsubscribe<LevelReadySignal>(OnLevelReady);
             _signalBus.TryUnsubscribe<GameOverSignal>(OnGameOver);
-            _signalBus.TryUnsubscribe<LevelCompleteSequenceFinishedSignal>(OnLevelCompleteSequenceFinished);
+            _signalBus.TryUnsubscribe<LevelCompletedSignal>(OnLevelCompleted);
         }
         
 
@@ -49,6 +49,6 @@ namespace Sdurlanik.BusJam.UI
         
         private void OnLevelReady() => ChangeState<UIGameplayState>();
         private void OnGameOver() => ChangeState<UIEndGameState>(false);
-        private void OnLevelCompleteSequenceFinished() => ChangeState<UIEndGameState>(true);
+        private void OnLevelCompleted() => ChangeState<UIEndGameState>(true);
     }
 }

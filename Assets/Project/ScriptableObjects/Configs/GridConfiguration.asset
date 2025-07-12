@@ -17,4 +17,4 @@ MonoBehaviour:
   WaitingAreaTilePrefab: {fileID: 995471777950965797, guid: 0fc3a416f0bf5444193073eedcd02455,
     type: 3}
   WaitingGridSize: {x: 5, y: 1}
-  SpacingBetweenGrids: 1
+  SpacingBetweenGrids: 0.94

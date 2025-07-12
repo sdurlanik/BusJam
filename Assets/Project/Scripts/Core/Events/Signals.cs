@@ -57,4 +57,15 @@ namespace Sdurlanik.BusJam.Core.Events
     
     public struct LevelCompleteSequenceFinishedSignal { }
     public struct TimeIsUpSignal { }
+    public struct BusArrivalSequenceStartedSignal 
+    {
+        public readonly IBusController ArrivingBus;
+        public BusArrivalSequenceStartedSignal(IBusController bus) => ArrivingBus = bus;
+    }
+
+    public struct CharacterEnteredWaitingAreaSignal
+    {
+        public readonly CharacterView Character;
+        public CharacterEnteredWaitingAreaSignal(CharacterView character) => Character = character;
+    }
 }

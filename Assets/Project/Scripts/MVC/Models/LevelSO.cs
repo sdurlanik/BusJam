@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.Serialization;
 
 namespace Sdurlanik.BusJam.Models
 {
@@ -30,7 +31,7 @@ namespace Sdurlanik.BusJam.Models
     public class LevelSO : ScriptableObject
     {
         [Header("Level Info")]
-        public int LevelNumber = 1;
+        public int LevelIndex = 1;
         
         [Header("Grid Settings")]
         public Vector2Int MainGridSize = new Vector2Int(5, 5);

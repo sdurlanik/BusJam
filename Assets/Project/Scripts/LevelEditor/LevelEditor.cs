@@ -87,7 +87,7 @@ namespace Sdurlanik.BusJam.LevelEditor
 
         private void PlaceBuses()
         {
-            if (PrefabConfig.BusPrefab == null || LevelToEdit.BusColorSequence.Count == 0)
+            if (PrefabConfig.BusPrefab == null || LevelToEdit.BusColorSequence?.Count == 0)
             {
                 return;
             }

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using DG.Tweening;
 using Cysharp.Threading.Tasks;
@@ -27,25 +28,27 @@ namespace Sdurlanik.BusJam.MVC.Views
             return null;
         }
 
-        public async UniTask AnimateArrival(Vector3 targetPosition)
-        {
-            transform.position = targetPosition + Vector3.left * _busSettings.MoveOffset;
-            await transform.DOMove(targetPosition, _busSettings.MoveDuration)
-                .SetEase(Ease.OutCubic)
-                .ToUniTask();
-        }
-
-        public async UniTask AnimateDeparture()
+        public async UniTask AnimateDeparture(CancellationToken cancellationToken)
         {
             await transform.DOMove(transform.position + Vector3.right * _busSettings.MoveOffset, _busSettings.MoveDuration)
                 .SetEase(Ease.InCubic)
-                .ToUniTask();
-            Destroy(gameObject);
+                .ToUniTask(cancellationToken: cancellationToken); 
         }
         
-        public async UniTask AnimateToStopPosition(Vector3 targetPosition)
+        public async UniTask AnimateToStopPosition(Vector3 targetPosition, CancellationToken cancellationToken)
         {
-            await transform.DOMove(targetPosition, 0.8f).SetEase(Ease.OutBack).ToUniTask();
+            await transform.DOMove(targetPosition, _busSettings.MoveDuration)
+                .SetEase(Ease.OutBack)
+                .ToUniTask(cancellationToken: cancellationToken);
+        }
+
+        public async UniTask AnimateArrival(Vector3 targetPosition, CancellationToken cancellationToken)
+        {
+            transform.position = targetPosition + Vector3.left * _busSettings.MoveOffset;
+
+            await transform.DOMove(targetPosition, _busSettings.MoveDuration)
+                .SetEase(Ease.OutCubic)
+                .ToUniTask(cancellationToken: cancellationToken);
         }
     }
 }

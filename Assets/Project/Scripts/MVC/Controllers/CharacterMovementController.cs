@@ -3,6 +3,7 @@ using System.Linq;
 using Sdurlanik.BusJam.Core.Grid;
 using Sdurlanik.BusJam.Core.Events;
 using Sdurlanik.BusJam.Core.Movement;
+using Sdurlanik.BusJam.Core.Pathfinding;
 using Sdurlanik.BusJam.Core.State;
 using Sdurlanik.BusJam.MVC.Views;
 using UnityEngine;
@@ -16,14 +17,17 @@ namespace Sdurlanik.BusJam.MVC.Controllers
         private readonly IGridSystemManager _gridSystemManager;
         private readonly IWaitingAreaController _waitingAreaController;
         private readonly IGameplayStateHolder _gameplayStateHolder;
+        private readonly IPathfindingService _pathfindingService;
 
         public CharacterMovementController(SignalBus signalBus, IGridSystemManager gridSystemManager,
-            IWaitingAreaController waitingAreaController, IGameplayStateHolder gameplayStateHolder)
+            IWaitingAreaController waitingAreaController, IGameplayStateHolder gameplayStateHolder,
+            IPathfindingService pathfindingService)
         {
             _signalBus = signalBus;
             _gridSystemManager = gridSystemManager;
             _waitingAreaController = waitingAreaController;
             _gameplayStateHolder = gameplayStateHolder;
+            _pathfindingService = pathfindingService;
 
             _signalBus.Subscribe<CharacterClickedSignal>(OnCharacterClicked);
         }
@@ -32,6 +36,7 @@ namespace Sdurlanik.BusJam.MVC.Controllers
         {
             if (!_gameplayStateHolder.IsGameplayActive)
             {
+                Debug.LogWarning("Gameplay is not active. Ignoring character click.");
                 return;
             }
             
@@ -43,15 +48,17 @@ namespace Sdurlanik.BusJam.MVC.Controllers
             }
 
             var mainGrid = _gridSystemManager.MainGrid;
-            var path = FindPathOnMainGrid(character, mainGrid);
+            var path = FindPathToExit(character, mainGrid);
             if (path == null)
             {
+                Debug.LogWarning($"No valid path found for character {character.name} to exit.");
                 return;
             }
 
             var reservedSlot = _waitingAreaController.ReserveNextAvailableSlot();
             if (reservedSlot == null)
             {
+                Debug.LogWarning($"No available slot in the waiting area for character {character.name}.");
                 return;
             }
 
@@ -72,7 +79,8 @@ namespace Sdurlanik.BusJam.MVC.Controllers
             }
         }
 
-        private List<Vector2Int> FindPathOnMainGrid(CharacterView character, IGrid grid)
+
+        private List<Vector2Int> FindPathToExit(CharacterView character, IGrid grid)
         {
             var exitPoints = GetExitPoints(grid);
             if (exitPoints.Count == 0) return null;
@@ -80,7 +88,7 @@ namespace Sdurlanik.BusJam.MVC.Controllers
             List<Vector2Int> shortestPath = null;
             foreach (var exitPoint in exitPoints)
             {
-                var foundPath = grid.FindPath(character.GridPosition, exitPoint);
+                var foundPath = _pathfindingService.FindPath(grid, character.GridPosition, exitPoint);
                 if (foundPath != null && (shortestPath == null || foundPath.Count < shortestPath.Count))
                 {
                     shortestPath = foundPath;
@@ -93,17 +101,17 @@ namespace Sdurlanik.BusJam.MVC.Controllers
         private List<Vector2Int> GetExitPoints(IGrid grid)
         {
             var exits = new List<Vector2Int>();
-            int topRow = 4;
-            int gridWidth = 5;
-            for (int i = 0; i < gridWidth; i++)
+            int topRowIndex = grid.Height - 1;
+
+            for (int x = 0; x < grid.Width; x++)
             {
-                var exitPos = new Vector2Int(i, topRow);
-                if (grid.IsCellAvailable(exitPos))
+                var exitPos = new Vector2Int(x, topRowIndex);
+                
+             if (grid.IsCellAvailable(exitPos))
                 {
                     exits.Add(exitPos);
                 }
             }
-
             return exits;
         }
     }

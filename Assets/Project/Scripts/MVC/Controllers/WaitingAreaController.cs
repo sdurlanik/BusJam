@@ -18,6 +18,7 @@ namespace Sdurlanik.BusJam.MVC.Controllers
         private readonly SignalBus _signalBus;
         private readonly HashSet<Vector2Int> _reservedSlots;
         private readonly CharacterView[] _slots;
+        private bool _isBoardingLocked = false;
         
         
         public WaitingAreaController(IGridSystemManager gridSystemManager, GridConfiguration gridConfig, IBusSystemManager busSystemManager, SignalBus signalBus)
@@ -31,15 +32,25 @@ namespace Sdurlanik.BusJam.MVC.Controllers
         
         public void Initialize()
         {
+            _signalBus.Subscribe<BusArrivalSequenceStartedSignal>(OnBusArrivalSequenceStarted);
             _signalBus.Subscribe<BusArrivedSignal>(OnBusArrived);
+            _signalBus.Subscribe<CharacterEnteredWaitingAreaSignal>(OnCharacterEnteredArea);
             _signalBus.Subscribe<ResetGameplaySignal>(Reset);
         }
         
         public void Dispose()
         {
+            _signalBus.TryUnsubscribe<BusArrivalSequenceStartedSignal>(OnBusArrivalSequenceStarted);
             _signalBus.TryUnsubscribe<BusArrivedSignal>(OnBusArrived);
+            _signalBus.TryUnsubscribe<CharacterEnteredWaitingAreaSignal>(OnCharacterEnteredArea);
             _signalBus.TryUnsubscribe<ResetGameplaySignal>(Reset);
         }
+        
+        private void OnBusArrivalSequenceStarted(BusArrivalSequenceStartedSignal signal)
+        {
+            _isBoardingLocked = true;
+        }
+
         public bool IsCharacterInArea(CharacterView character)
         {
             return _slots.Contains(character);
@@ -69,36 +80,42 @@ namespace Sdurlanik.BusJam.MVC.Controllers
                 _slots[index] = null;
             }
         }
+        
         public async UniTask FinalizeMoveToSlot(CharacterView character, Vector2Int reservedSlot)
         {
             var waitingGrid = _gridSystemManager.WaitingAreaGrid;
             var targetPosition = waitingGrid.GetWorldPosition(reservedSlot, 0.5f);
-            
+        
             await character.MoveToPoint(targetPosition);
-            Debug.Log("Character move to point completed");
 
             _reservedSlots.Remove(reservedSlot);
             waitingGrid.PlaceObject(character.gameObject, reservedSlot);
             _slots[reservedSlot.x] = character;
             character.UpdateGridPosition(reservedSlot);
-            
-            await CheckAndBoardCharacter(character);
+        
+            _signalBus.Fire(new CharacterEnteredWaitingAreaSignal(character));
         }
         
         private async void OnBusArrived(BusArrivedSignal signal)
         {
+            _isBoardingLocked = false;
+        
             var waitingCharacters = _slots.Where(c => c != null).ToList();
-           
             foreach (var character in waitingCharacters)
             {
-                if (_busSystemManager.CurrentBus == null || !_busSystemManager.CurrentBus.HasSpace())
-                {
-                    break; 
-                }
-
+                if (_busSystemManager.CurrentBus == null || !_busSystemManager.CurrentBus.HasSpace()) break;
                 await CheckAndBoardCharacter(character);
             }
         }
+        
+        private async void OnCharacterEnteredArea(CharacterEnteredWaitingAreaSignal signal)
+        {
+            if (!_isBoardingLocked)
+            {
+                await CheckAndBoardCharacter(signal.Character);
+            }
+        }
+
         
         private async UniTask<bool> CheckAndBoardCharacter(CharacterView character)
         {
@@ -107,8 +124,8 @@ namespace Sdurlanik.BusJam.MVC.Controllers
 
             if (currentBus.CanBoard(character))
             {
-                RemoveCharacterFromArea(character);
         
+                RemoveCharacterFromArea(character);
                 await currentBus.BoardCharacterAsync(character);
                 Debug.Log($"{character.Color.ToString()} board");
                 return true;

@@ -13,8 +13,6 @@ namespace Sdurlanik.BusJam.Core.Grid
         
         [Header("Waiting Area Dimensions")]
         public Vector2Int WaitingGridSize = new Vector2Int(5, 1);
-
-        [Header("Layout Settings")] 
         public float SpacingBetweenGrids = 2f;
     }
 }

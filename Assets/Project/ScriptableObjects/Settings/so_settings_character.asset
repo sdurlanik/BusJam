@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 21a648a3d9fd4e19b30f2bac77345373, type: 3}
   m_Name: so_settings_character
   m_EditorClassIdentifier: 
-  MoveDuration: 0.4
+  MoveDuration: 0.2
