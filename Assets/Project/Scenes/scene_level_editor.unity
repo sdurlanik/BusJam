@@ -152,7 +152,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0d001c652d441a08b402db011be54c7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  LevelToEdit: {fileID: 0}
+  LevelToEdit: {fileID: 11400000, guid: 7313915814c9aa546b348ea4f19fa209, type: 2}
   PrefabConfig: {fileID: 11400000, guid: 27f7f8c7999f7574eba7067e3a207374, type: 2}
   GridConfig: {fileID: 11400000, guid: ff8e65ccd804b1c48b1babadf38131a1, type: 2}
   LevelHolder: {fileID: 597754715}
@@ -257,8 +257,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963926715}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.49496773, y: 0.005732156, z: -0.003265667, w: -0.8688864}
-  m_LocalPosition: {x: 2.2058237, y: 9.319115, z: -3.3421116}
+  m_LocalRotation: {x: 0.5, y: 0, z: 0, w: 0.8660254}
+  m_LocalPosition: {x: 2, y: 9.7375, z: 0.022389412}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

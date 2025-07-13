@@ -1,6 +1,7 @@
-﻿using Sdurlanik.BusJam.Models;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Sdurlanik.BusJam.Core.Grid;
+using Sdurlanik.BusJam.Models;
 using Sdurlanik.BusJam.MVC.Models;
 using UnityEngine;
 
@@ -23,7 +24,11 @@ namespace Sdurlanik.BusJam.LevelEditor
         {
             ClearLevel();
 
-            if (LevelToEdit == null || PrefabConfig == null || LevelHolder == null) return;
+            if (LevelToEdit == null || PrefabConfig == null || LevelHolder == null)
+            {
+                Debug.LogError("Please assign all required fields in the LevelEditor component!");
+                return;
+            }
 
             DrawMainGrid();
             DrawWaitingArea();
@@ -50,7 +55,7 @@ namespace Sdurlanik.BusJam.LevelEditor
         private void DrawMainGrid()
         {
             if (GridConfig.MainGridTilePrefab == null) return;
-
+            
             for (int x = 0; x < LevelToEdit.MainGridSize.x; x++)
             {
                 for (int y = 0; y < LevelToEdit.MainGridSize.y; y++)
@@ -64,9 +69,13 @@ namespace Sdurlanik.BusJam.LevelEditor
         private void DrawWaitingArea()
         {
             if (GridConfig.WaitingAreaTilePrefab == null) return;
-            
-            var waitingAreaOrigin = new Vector3(0, 0, LevelToEdit.MainGridSize.y + GridConfig.SpacingBetweenGrids);
 
+            float mainGridWidth = LevelToEdit.MainGridSize.x;
+            float waitingAreaWidth = GridConfig.WaitingGridSize.x;
+            float xOffset = (mainGridWidth - waitingAreaWidth) / 2f;
+            float zOffset = LevelToEdit.MainGridSize.y + GridConfig.SpacingBetweenGrids;
+            var waitingAreaOrigin = new Vector3(xOffset, 0, zOffset);
+            
             for (int x = 0; x < GridConfig.WaitingGridSize.x; x++)
             {
                 for (int y = 0; y < GridConfig.WaitingGridSize.y; y++)
@@ -80,7 +89,7 @@ namespace Sdurlanik.BusJam.LevelEditor
 
         private void PlaceBuses()
         {
-            if (PrefabConfig.BusPrefab == null || LevelToEdit.BusColorSequence == null || LevelToEdit.BusColorSequence.Count == 0) return;
+            if (PrefabConfig.BusPrefab == null || LevelToEdit.BusColorSequence == null || !LevelToEdit.BusColorSequence.Any()) return;
             
             var currentBusColor = LevelToEdit.BusColorSequence[0];
             var currentBusInstance = Instantiate(PrefabConfig.BusPrefab, LevelToEdit.BusStopPosition, Quaternion.identity, LevelHolder);
@@ -101,7 +110,7 @@ namespace Sdurlanik.BusJam.LevelEditor
         {
             var renderer = instance.GetComponentInChildren<MeshRenderer>();
             if (renderer == null) return;
-            
+
             var newMaterial = new Material(renderer.sharedMaterial) { color = ColorMapper.GetColorFromEnum(color) };
             renderer.material = newMaterial;
             _instancedMaterials.Add(newMaterial);

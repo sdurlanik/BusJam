@@ -35,6 +35,6 @@ MonoBehaviour:
     GridPosition: {x: 3, y: 1}
   Obstacles: []
   BusColorSequence: 000000000100000000000000
-  BusStopPosition: {x: 2, y: 0.5, z: 8}
+  BusStopPosition: {x: 2, y: 0.5, z: 8.18}
   NextBusOffset: {x: -4, y: 0, z: 0}
   TimeLimitInSeconds: 30

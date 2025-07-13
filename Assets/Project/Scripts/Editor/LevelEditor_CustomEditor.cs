@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Linq;
+using Sdurlanik.BusJam.Core.Grid;
 using Sdurlanik.BusJam.Models;
 using UnityEditor;
 using UnityEngine;
@@ -20,12 +21,17 @@ namespace Sdurlanik.BusJam.LevelEditor
         private void OnEnable()
         {
             UpdateSerializedObjects();
+            SceneView.duringSceneGui += OnSceneGUI;
+        }
+
+        private void OnDisable()
+        {
+            SceneView.duringSceneGui -= OnSceneGUI;
         }
 
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
-
             LevelEditor editor = (LevelEditor)target;
 
             DrawConfigurationSection(editor);
@@ -35,14 +41,16 @@ namespace Sdurlanik.BusJam.LevelEditor
             gridConfigSO.Update();
 
             EditorGUI.BeginChangeCheck();
-
             DrawToolsSection();
             DrawLevelPropertiesSection(editor);
             DrawBusSettingsSection(editor);
             DrawGridSettingsSection(editor);
 
             if (EditorGUI.EndChangeCheck())
+            {
                 editor.DisplayLevel();
+                FocusCameraOnGrid(editor);
+            }
 
             DrawActionButtons(editor);
 
@@ -53,6 +61,28 @@ namespace Sdurlanik.BusJam.LevelEditor
 
         #region Section Drawers
 
+        private void DrawActionButtons(LevelEditor editor)
+        {
+            EditorGUILayout.Space(20);
+
+            if (GUILayout.Button("Focus Camera on Grid", GUILayout.Height(30)))
+            {
+                FocusCameraOnGrid(editor);
+            }
+            
+            EditorGUILayout.Space(10);
+            
+            GUI.backgroundColor = new Color(0.6f, 1f, 0.6f);
+            if (GUILayout.Button("Save Changes & Rename Asset", GUILayout.Height(40)))
+                SaveLevelAsset(editor.LevelToEdit);
+
+            GUI.backgroundColor = new Color(1f, 0.8f, 0.4f);
+            if (GUILayout.Button("Create New Level Asset"))
+                CreateNewLevelAsset(editor);
+
+            GUI.backgroundColor = Color.white;
+        }
+        
         private void DrawConfigurationSection(LevelEditor editor)
         {
             EditorGUILayout.BeginVertical("box");
@@ -72,7 +102,6 @@ namespace Sdurlanik.BusJam.LevelEditor
 
             EditorGUILayout.EndVertical();
         }
-
         private void DrawToolsSection()
         {
             EditorGUILayout.Space(15);
@@ -89,7 +118,6 @@ namespace Sdurlanik.BusJam.LevelEditor
 
             EditorGUILayout.EndVertical();
         }
-
         private void DrawLevelPropertiesSection(LevelEditor editor)
         {
             EditorGUILayout.Space(15);
@@ -99,21 +127,26 @@ namespace Sdurlanik.BusJam.LevelEditor
             EditorGUILayout.PropertyField(levelSO.FindProperty("LevelIndex"));
             EditorGUILayout.PropertyField(levelSO.FindProperty("TimeLimitInSeconds"));
 
-            var gridSizeProp = levelSO.FindProperty("MainGridSize");
-            EditorGUILayout.PropertyField(gridSizeProp);
+            SerializedProperty gridSizeProp = levelSO.FindProperty("MainGridSize");
+            Vector2Int gridSize = gridSizeProp.vector2IntValue;
 
             Vector2Int minGrid = GetMinimumGridSize(editor.LevelToEdit);
-            if (gridSizeProp.vector2IntValue.x < minGrid.x || gridSizeProp.vector2IntValue.y < minGrid.y)
+            Vector2Int newGridSize = EditorGUILayout.Vector2IntField("Main Grid Size", gridSize);
+
+            newGridSize.x = Mathf.Max(newGridSize.x, minGrid.x);
+            newGridSize.y = Mathf.Max(newGridSize.y, minGrid.y);
+
+            if (newGridSize != gridSize)
             {
-                EditorGUILayout.HelpBox($"Grid size adjusted to {minGrid} to fit placed objects.", MessageType.Warning);
-                gridSizeProp.vector2IntValue = new Vector2Int(
-                    Mathf.Max(minGrid.x, gridSizeProp.vector2IntValue.x),
-                    Mathf.Max(minGrid.y, gridSizeProp.vector2IntValue.y)
-                );
+                gridSizeProp.vector2IntValue = newGridSize;
+                levelSO.ApplyModifiedProperties();
+                editor.DisplayLevel();
+                GUI.FocusControl(null);
             }
 
             EditorGUILayout.EndVertical();
         }
+
 
         private void DrawBusSettingsSection(LevelEditor editor)
         {
@@ -135,7 +168,6 @@ namespace Sdurlanik.BusJam.LevelEditor
 
             EditorGUILayout.EndVertical();
         }
-
         private void DrawGridSettingsSection(LevelEditor editor)
         {
             EditorGUILayout.Space(15);
@@ -151,26 +183,65 @@ namespace Sdurlanik.BusJam.LevelEditor
 
             EditorGUILayout.EndVertical();
         }
-
-        private void DrawActionButtons(LevelEditor editor)
-        {
-            EditorGUILayout.Space(20);
-            EditorGUILayout.HelpBox("Saving will rename the asset based on LevelIndex.", MessageType.Info);
-
-            GUI.backgroundColor = new Color(0.6f, 1f, 0.6f);
-            if (GUILayout.Button("Save Changes & Rename Asset", GUILayout.Height(40)))
-                SaveLevelAsset(editor.LevelToEdit);
-
-            GUI.backgroundColor = new Color(1f, 0.8f, 0.4f);
-            if (GUILayout.Button("Create New Level Asset"))
-                CreateNewLevelAsset(editor);
-
-            GUI.backgroundColor = Color.white;
-        }
+        
 
         #endregion
 
-        #region Utility Methods
+        #region Utility & Camera Methods
+
+        private void FocusCameraOnGrid(LevelEditor editor)
+        {
+            SceneView sceneView = SceneView.lastActiveSceneView;
+            if (sceneView == null || sceneView.camera == null) return;
+            
+            var camera = sceneView.camera;
+            var levelData = editor.LevelToEdit;
+
+            camera.orthographic = false;
+            float fieldOfView = 60f;
+            float padding = 1.15f;
+            
+            Bounds gameplayBounds = CalculateGameplayBounds(levelData, editor.GridConfig);
+
+            float worldWidth = gameplayBounds.size.x;
+            float worldHeight = gameplayBounds.size.z;
+            
+            float verticalFovRad = fieldOfView * Mathf.Deg2Rad;
+            float horizontalFovRad = 2f * Mathf.Atan(Mathf.Tan(verticalFovRad / 2f) * camera.aspect);
+
+            float distanceForHeight = (worldHeight / 2f) / Mathf.Tan(verticalFovRad / 2f);
+            float distanceForWidth = (worldWidth / 2f) / Mathf.Tan(horizontalFovRad / 2f);
+            
+            float requiredDistance = Mathf.Max(distanceForWidth, distanceForHeight);
+            
+            Vector3 targetPoint = gameplayBounds.center;
+            targetPoint.x = (levelData.MainGridSize.x - 1) / 2f;
+            
+            var rotation = Quaternion.Euler(60f, 0, 0);
+            
+            sceneView.LookAt(targetPoint, rotation, requiredDistance * padding, false);
+        }
+        
+        private Bounds CalculateGameplayBounds(LevelSO levelData, GridConfiguration gridConfig)
+        {
+            var bounds = new Bounds();
+            bounds.Encapsulate(Vector3.zero);
+            bounds.Encapsulate(new Vector3(levelData.MainGridSize.x, 0, levelData.MainGridSize.y));
+
+            float waitingAreaXOffset = (levelData.MainGridSize.x - gridConfig.WaitingGridSize.x) / 2f;
+            float waitingAreaZPos = levelData.MainGridSize.y + gridConfig.SpacingBetweenGrids;
+            
+            var waitingAreaStart = new Vector3(waitingAreaXOffset, 0, waitingAreaZPos);
+            var waitingAreaEnd = waitingAreaStart + new Vector3(gridConfig.WaitingGridSize.x, 0, gridConfig.WaitingGridSize.y);
+            
+            bounds.Encapsulate(waitingAreaStart);
+            bounds.Encapsulate(waitingAreaEnd);
+            
+            bounds.Encapsulate(levelData.BusStopPosition);
+            bounds.Encapsulate(levelData.BusStopPosition + levelData.NextBusOffset);
+
+            return bounds;
+        }
 
         private void UpdateSerializedObjects()
         {
@@ -178,7 +249,6 @@ namespace Sdurlanik.BusJam.LevelEditor
             levelSO = editor.LevelToEdit != null ? new SerializedObject(editor.LevelToEdit) : null;
             gridConfigSO = editor.GridConfig != null ? new SerializedObject(editor.GridConfig) : null;
         }
-
         private bool IsEditorReady(LevelEditor editor)
         {
             if (editor.LevelToEdit == null || editor.GridConfig == null || editor.PrefabConfig == null)
@@ -189,7 +259,6 @@ namespace Sdurlanik.BusJam.LevelEditor
 
             return true;
         }
-
         private Vector2Int GetMinimumGridSize(LevelSO level)
         {
             int maxX = 0;
@@ -209,8 +278,6 @@ namespace Sdurlanik.BusJam.LevelEditor
 
             return new Vector2Int(maxX + 1, maxY + 1);
         }
-
-
         private void SaveLevelAsset(LevelSO level)
         {
             string path = AssetDatabase.GetAssetPath(level);
@@ -225,7 +292,6 @@ namespace Sdurlanik.BusJam.LevelEditor
 
             Debug.Log($"Saved Level: {newName}");
         }
-
         private void CreateNewLevelAsset(LevelEditor editor)
         {
             string path = EditorUtility.SaveFilePanelInProject(
@@ -248,13 +314,10 @@ namespace Sdurlanik.BusJam.LevelEditor
             UpdateSerializedObjects();
 
             editor.DisplayLevel();
-
             EditorUtility.SetDirty(editor);
             Repaint();
 
             Selection.activeGameObject = editor.gameObject;
-
-            Debug.Log($"🆕 New level created at: {path}");
         }
 
 
@@ -262,7 +325,7 @@ namespace Sdurlanik.BusJam.LevelEditor
 
         #region Scene Interaction
 
-        private void OnSceneGUI()
+        private void OnSceneGUI(SceneView sceneView)
         {
             LevelEditor editor = (LevelEditor)target;
             if (editor.LevelToEdit == null || _currentTool == EditorTool.None) return;
@@ -310,7 +373,6 @@ namespace Sdurlanik.BusJam.LevelEditor
                 Repaint();
             }
         }
-
         #endregion
     }
 }

@@ -32,7 +32,13 @@ namespace Sdurlanik.BusJam.Core.Grid
             MainGrid = new Grid(levelData.MainGridSize.x, levelData.MainGridSize.y, mainGridOrigin,
                 _config.MainGridTilePrefab, _container);
 
-            var waitingAreaOrigin = mainGridOrigin + new Vector3(0, 0, levelData.MainGridSize.y + _config.SpacingBetweenGrids);
+            float mainGridWidth = levelData.MainGridSize.x;
+            float waitingAreaWidth = _config.WaitingGridSize.x;
+            float xOffset = (mainGridWidth - waitingAreaWidth) / 2f;
+
+            float zOffset = levelData.MainGridSize.y + _config.SpacingBetweenGrids;
+            var waitingAreaOrigin = mainGridOrigin + new Vector3(xOffset, 0, zOffset);
+    
             WaitingAreaGrid = new Grid(_config.WaitingGridSize.x, _config.WaitingGridSize.y, waitingAreaOrigin,
                 _config.WaitingAreaTilePrefab, _container);
         }

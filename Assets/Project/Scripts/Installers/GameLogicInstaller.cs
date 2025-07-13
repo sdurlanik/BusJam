@@ -1,5 +1,6 @@
 ﻿using Sdurlanik.BusJam.Core;
 using Sdurlanik.BusJam.Core.BusSystem;
+using Sdurlanik.BusJam.Core.Camera;
 using Sdurlanik.BusJam.Core.Grid;
 using Sdurlanik.BusJam.Core.Movement;
 using Sdurlanik.BusJam.Core.Pathfinding;
@@ -15,6 +16,8 @@ namespace Sdurlanik.BusJam.Installers
         {
             Container.Bind<ILevelController>().To<LevelController>().AsSingle().NonLazy();
             Container.Bind<IPathfindingService>().To<PathfindingService>().AsSingle();
+            Container.Bind<UnityEngine.Camera>().FromComponentInHierarchy().AsSingle();
+            Container.BindInterfacesAndSelfTo<CameraController>().AsSingle();
             Container.BindInterfacesAndSelfTo<GridSystemManager>().AsSingle().NonLazy();
             Container.BindInterfacesAndSelfTo<BusSystemManager>().AsSingle().NonLazy();
             Container.BindInterfacesAndSelfTo<WaitingAreaController>().AsSingle().NonLazy();
