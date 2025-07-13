@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CharacterPrefab: {fileID: 2899515022793868174, guid: c56d3f1a754fb1d46bec6b4be423ab02,
     type: 3}
-  ObstaclePrefab: {fileID: 0}
+  ObstaclePrefab: {fileID: 995471777950965797, guid: a7ccc5e197cc6bd42a6f926bc9f8ceaf,
+    type: 3}
   BusPrefab: {fileID: 2030158678676546593, guid: 0e6da1ae194912047b9364d6f178fe70,
     type: 3}

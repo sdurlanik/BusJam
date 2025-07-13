@@ -73,20 +73,20 @@ namespace Sdurlanik.BusJam.Core.Grid
                    gridPosition.y >= 0 && gridPosition.y < _height;
         }
 
-        public int GetOccupiedCellCount()
+        public List<GameObject> GetAllOccupiedObjects()
         {
-            int count = 0;
+            var occupiedObjects = new List<GameObject>();
             for (int x = 0; x < _width; x++)
             {
                 for (int y = 0; y < _height; y++)
                 {
                     if (_gridObjects[x, y] != null)
                     {
-                        count++;
+                        occupiedObjects.Add(_gridObjects[x, y]);
                     }
                 }
             }
-            return count;
+            return occupiedObjects;
         }
 
         public void ClearAllCells()

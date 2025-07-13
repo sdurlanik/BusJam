@@ -13,28 +13,22 @@ MonoBehaviour:
   m_Name: so_level_1
   m_EditorClassIdentifier: 
   LevelIndex: 0
-  MainGridSize: {x: 5, y: 5}
+  MainGridSize: {x: 3, y: 2}
   Characters:
   - Color: 0
-    GridPosition: {x: 0, y: 0}
-  - Color: 0
-    GridPosition: {x: 1, y: 0}
-  - Color: 0
-    GridPosition: {x: 2, y: 0}
-  - Color: 0
-    GridPosition: {x: 3, y: 0}
-  - Color: 0
-    GridPosition: {x: 4, y: 0}
-  - Color: 1
     GridPosition: {x: 0, y: 1}
-  - Color: 1
-    GridPosition: {x: 1, y: 1}
-  - Color: 1
-    GridPosition: {x: 2, y: 1}
   - Color: 0
-    GridPosition: {x: 3, y: 1}
+    GridPosition: {x: 1, y: 1}
+  - Color: 0
+    GridPosition: {x: 2, y: 1}
+  - Color: 1
+    GridPosition: {x: 0, y: 0}
+  - Color: 1
+    GridPosition: {x: 1, y: 0}
+  - Color: 1
+    GridPosition: {x: 2, y: 0}
   Obstacles: []
-  BusColorSequence: 000000000100000000000000
-  BusStopPosition: {x: 2, y: 0.5, z: 8.18}
+  BusColorSequence: 0000000001000000
+  BusStopPosition: {x: 0.9, y: 0.5, z: 5.65}
   NextBusOffset: {x: -4, y: 0, z: 0}
   TimeLimitInSeconds: 30

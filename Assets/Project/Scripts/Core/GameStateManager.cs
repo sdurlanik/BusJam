@@ -6,6 +6,7 @@ using Sdurlanik.BusJam.Core.Grid;
 using Sdurlanik.BusJam.Core.Movement;
 using Sdurlanik.BusJam.Core.State;
 using Sdurlanik.BusJam.MVC.Controllers;
+using Sdurlanik.BusJam.MVC.Views;
 using UnityEngine;
 using Zenject;
 
@@ -67,10 +68,13 @@ namespace Sdurlanik.BusJam.Core
 
         private void CheckWinCondition()
         {
-            var mainGridCount = _gridSystemManager.MainGrid.GetOccupiedCellCount();
+            var allGridObjects = _gridSystemManager.MainGrid.GetAllOccupiedObjects();
+
+            var characterCountOnGrid = allGridObjects.Count(obj => obj.GetComponent<CharacterView>() != null);
+    
             var waitingAreaCount = _waitingAreaController.GetWaitingCharacterCount();
-            
-            if (mainGridCount == 0 && waitingAreaCount == 0)
+    
+            if (characterCountOnGrid == 0 && waitingAreaCount == 0)
             {
                 ProcessWinState();
             }
@@ -84,10 +88,11 @@ namespace Sdurlanik.BusJam.Core
         {
             if (!_gameplayStateHolder.IsGameplayActive) return;
 
-            var mainGridCount = _gridSystemManager.MainGrid.GetOccupiedCellCount();
+            var allGridObjects = _gridSystemManager.MainGrid.GetAllOccupiedObjects();
+            var characterCountOnGrid = allGridObjects.Count(obj => obj.GetComponent<CharacterView>() != null);
             var waitingAreaCount = _waitingAreaController.GetWaitingCharacterCount();
 
-            if (mainGridCount > 0 || waitingAreaCount > 0)
+            if (characterCountOnGrid > 0 || waitingAreaCount > 0)
             {
                 ProcessGameOverState("Game ended with stuck characters.");
             }

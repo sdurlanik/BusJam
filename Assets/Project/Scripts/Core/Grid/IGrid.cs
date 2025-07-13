@@ -12,7 +12,7 @@ namespace Sdurlanik.BusJam.Core.Grid
         bool IsCellAvailable(Vector2Int gridPosition);
         GameObject GetObjectAt(Vector2Int gridPosition);
         Vector3 GetWorldPosition(Vector2Int gridPosition, float yOffset = 0);
-        int GetOccupiedCellCount();
+        List<GameObject> GetAllOccupiedObjects();
         void ClearAllCells();
     }
 }

@@ -62,8 +62,11 @@ namespace Sdurlanik.BusJam.MVC.Controllers
         
         private List<Vector2Int> FindPathToExit(CharacterView character, IGrid grid)
         {
-            var exitPoints = GetExitPoints(grid);
-            if (exitPoints.Count == 0) return null;
+            var exitPoints = GetExitPoints(grid, character);
+            if (exitPoints.Count == 0)
+            {
+                return null;
+            }
 
             List<Vector2Int> shortestPath = null;
             foreach (var exitPoint in exitPoints)
@@ -75,10 +78,11 @@ namespace Sdurlanik.BusJam.MVC.Controllers
                 }
             }
 
-            return (shortestPath != null && shortestPath.Count > 1) ? shortestPath : null;
+            return (shortestPath != null && shortestPath.Count >= 1) ? shortestPath : null;
         }
 
-        private List<Vector2Int> GetExitPoints(IGrid grid)
+
+        private List<Vector2Int> GetExitPoints(IGrid grid, CharacterView characterToMove)
         {
             var exits = new List<Vector2Int>();
             int topRowIndex = grid.Height - 1;
@@ -86,7 +90,9 @@ namespace Sdurlanik.BusJam.MVC.Controllers
             for (int x = 0; x < grid.Width; x++)
             {
                 var exitPos = new Vector2Int(x, topRowIndex);
-                if (grid.IsCellAvailable(exitPos))
+                var objectAtExit = grid.GetObjectAt(exitPos);
+
+                if (objectAtExit == null || objectAtExit == characterToMove.gameObject)
                 {
                     exits.Add(exitPos);
                 }
